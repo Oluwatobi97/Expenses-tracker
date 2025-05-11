@@ -1,18 +1,21 @@
-import {
+import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   ReactNode,
 } from "react";
-import { Transaction, Category } from "../types";
+import { Transaction, Category, defaultCategories } from "../types";
 import { useAuth } from "./AuthContext";
 
 interface TransactionContextType {
   transactions: Transaction[];
   categories: Category[];
   addTransaction: (transaction: Omit<Transaction, "id" | "userId">) => void;
-  editTransaction: (id: string, transaction: Omit<Transaction, "id">) => void;
+  editTransaction: (
+    id: string,
+    transaction: Omit<Transaction, "id" | "userId">
+  ) => void;
   deleteTransaction: (id: string) => void;
   getMonthlySummary: () => {
     totalIncome: number;
@@ -24,23 +27,6 @@ interface TransactionContextType {
 const TransactionContext = createContext<TransactionContextType | undefined>(
   undefined
 );
-
-const defaultCategories: Category[] = [
-  { id: "1", name: "Food", type: "expense" },
-  { id: "2", name: "Subscriptions", type: "expense" },
-  { id: "3", name: "Housing", type: "expense" },
-  { id: "4", name: "Transport", type: "expense" },
-  { id: "5", name: "Entertainment", type: "expense" },
-  { id: "6", name: "Other", type: "expense" },
-  { id: "7", name: "Salary", type: "income" },
-  { id: "8", name: "Freelance", type: "income" },
-  { id: "9", name: "Investments", type: "income" },
-  { id: "2", name: "Clothing", type: "expense" },
-  { id: "3", name: "Transport", type: "expense" },
-  { id: "4", name: "Salary", type: "income" },
-  { id: "5", name: "Freelance", type: "income" },
-  { id: "6", name: "Investments", type: "income" },
-];
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -82,15 +68,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
   const editTransaction = (
     id: string,
-    transaction: Omit<Transaction, "id">
+    transaction: Omit<Transaction, "id" | "userId">
   ) => {
-    setTransactions(
-      transactions.map((t) => (t.id === id ? { ...transaction, id } : t))
+    if (!user) return;
+
+    setTransactions((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...transaction, id, userId: user.id } : t
+      )
     );
   };
 
   const deleteTransaction = (id: string) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
   const getMonthlySummary = () => {

@@ -6,11 +6,12 @@ import {
   ReactNode,
 } from "react";
 import { Transaction, Category } from "../types";
+import { useAuth } from "./AuthContext";
 
 interface TransactionContextType {
   transactions: Transaction[];
   categories: Category[];
-  addTransaction: (transaction: Omit<Transaction, "id">) => void;
+  addTransaction: (transaction: Omit<Transaction, "id" | "userId">) => void;
   editTransaction: (id: string, transaction: Omit<Transaction, "id">) => void;
   deleteTransaction: (id: string) => void;
   getMonthlySummary: () => {
@@ -42,22 +43,41 @@ const defaultCategories: Category[] = [
 ];
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem("transactions");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories] = useState<Category[]>(defaultCategories);
+  const { user } = useAuth();
 
   useEffect(() => {
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [transactions]);
+    if (user) {
+      const storedTransactions = localStorage.getItem(
+        `transactions_${user.id}`
+      );
+      if (storedTransactions) {
+        setTransactions(JSON.parse(storedTransactions));
+      }
+    } else {
+      setTransactions([]);
+    }
+  }, [user]);
 
-  const addTransaction = (transaction: Omit<Transaction, "id">) => {
-    const newTransaction = {
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(
+        `transactions_${user.id}`,
+        JSON.stringify(transactions)
+      );
+    }
+  }, [transactions, user]);
+
+  const addTransaction = (transaction: Omit<Transaction, "id" | "userId">) => {
+    if (!user) return;
+
+    const newTransaction: Transaction = {
       ...transaction,
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substr(2, 9),
+      userId: user.id,
     };
-    setTransactions([...transactions, newTransaction]);
+    setTransactions((prev) => [...prev, newTransaction]);
   };
 
   const editTransaction = (

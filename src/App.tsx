@@ -1,47 +1,59 @@
-import { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import { TransactionProvider } from "./context/TransactionContext";
-import TransactionForm from "./components/TransactionForm";
+import Navigation from "./components/Navigation";
+import LoginForm from "./components/LoginForm";
+import RegisterForm from "./components/RegisterForm";
+import Dashboard from "./components/Dashboard";
 import TransactionList from "./components/TransactionList";
-import MonthlySummary from "./components/MonthlySummary";
+import { useAuth } from "./context/AuthContext";
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return user ? <>{children}</> : <Navigate to="/login" />;
+}
 
 function App() {
-  const [showForm, setShowForm] = useState(false);
-
   return (
-    <TransactionProvider>
-      <div className="min-h-screen bg-gray-100">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                Expense Tracker
-              </h1>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Add Transaction
-              </button>
-            </div>
-
-            <MonthlySummary />
-
-            <div className="mt-8">
-              <TransactionList />
-            </div>
-
-            {showForm && (
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                  <h2 className="text-lg font-medium mb-4">Add Transaction</h2>
-                  <TransactionForm onClose={() => setShowForm(false)} />
-                </div>
+    <AuthProvider>
+      <TransactionProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-100">
+            <Navigation />
+            <main className="py-10">
+              <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <Routes>
+                  <Route path="/login" element={<LoginForm />} />
+                  <Route path="/register" element={<RegisterForm />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/transactions"
+                    element={
+                      <PrivateRoute>
+                        <TransactionList />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route path="/" element={<Navigate to="/dashboard" />} />
+                </Routes>
               </div>
-            )}
+            </main>
           </div>
-        </div>
-      </div>
-    </TransactionProvider>
+        </Router>
+      </TransactionProvider>
+    </AuthProvider>
   );
 }
 

@@ -5,7 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { Transaction, Category, TransactionType } from "../types";
+import { Transaction, Category } from "../types";
 
 interface TransactionContextType {
   transactions: Transaction[];

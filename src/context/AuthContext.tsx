@@ -5,12 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import {
-  User,
-  AuthState,
-  LoginCredentials,
-  RegisterCredentials,
-} from "../types/auth";
+import { User, LoginCredentials, RegisterCredentials } from "../types/auth";
 
 interface AuthState {
   user: User | null;

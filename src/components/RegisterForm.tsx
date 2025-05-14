@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { RegisterCredentials } from "../types/auth";
+import { useNavigate } from "react-router-dom";
 
 interface FormErrors {
   name?: string;
@@ -11,6 +12,7 @@ interface FormErrors {
 
 export default function RegisterForm() {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<RegisterCredentials>({
     email: "",
     password: "",
@@ -65,6 +67,7 @@ export default function RegisterForm() {
     setIsSubmitting(true);
     try {
       await register(formData);
+      navigate("/dashboard");
     } catch (error) {
       setErrors({
         email: "Registration failed. Please try again.",

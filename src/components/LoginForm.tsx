@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { LoginCredentials } from "../types/auth";
+import { useNavigate } from "react-router-dom";
 
 interface FormErrors {
   email?: string;
@@ -10,6 +11,7 @@ interface FormErrors {
 
 export default function LoginForm() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<LoginCredentials>({
     email: "",
     password: "",
@@ -44,6 +46,7 @@ export default function LoginForm() {
     setIsSubmitting(true);
     try {
       await login(formData);
+      navigate("/dashboard");
     } catch (error) {
       setErrors({
         general: "Invalid email or password. Please try again.",

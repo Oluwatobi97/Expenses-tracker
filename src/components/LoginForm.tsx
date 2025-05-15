@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { LoginCredentials } from "../types/auth";
 import { useNavigate } from "react-router-dom";
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface FormErrors {
   email?: string;
@@ -136,12 +136,12 @@ export default function LoginForm() {
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
-            <a
-              href="/register"
+            <Link
+              to="/register"
               className="inline-flex items-center px-4 py-2  text-sm font-light text-blue-500 hover:text-indigo-700  "
             >
               Register
-            </a>
+            </Link>
           </div>
           <div className="mt-36"></div>
         </form>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { RegisterCredentials } from "../types/auth";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 interface FormErrors {
   name?: string;
   email?: string;
@@ -191,6 +191,12 @@ export default function RegisterForm() {
             >
               {isSubmitting ? "Registering..." : "Register"}
             </button>
+            <Link
+              to="/login"
+              className="inline-flex items-center px-4 py-2  text-sm font-light  text-indigo-600  hover:bg-gray-50"
+            >
+              Login
+            </Link>
           </div>
         </form>
       </div>

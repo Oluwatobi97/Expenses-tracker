@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  resetTimer: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,8 +48,50 @@ const validatePassword = (password: string): string | null => {
   return null;
 };
 
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+
+  // Reset the timer on user activity
+  const resetTimer = () => {
+    setLastActivity(Date.now());
+  };
+
+  // Check for inactivity
+  useEffect(() => {
+    if (!user) return;
+
+    const checkInactivity = () => {
+      const now = Date.now();
+      if (now - lastActivity > INACTIVITY_TIMEOUT) {
+        logout();
+      }
+    };
+
+    // Add event listeners for user activity
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    // Check every minute
+    const interval = setInterval(checkInactivity, 60000);
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+      clearInterval(interval);
+    };
+  }, [user, lastActivity]);
 
   useEffect(() => {
     // Check for stored user data on mount
@@ -57,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        setLastActivity(Date.now());
       } catch (error) {
         console.error("Error parsing stored user:", error);
         localStorage.removeItem("user");
@@ -80,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { password: _, ...userWithoutPassword } = foundUser;
         setUser(userWithoutPassword as User);
         localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+        setLastActivity(Date.now());
       } else {
         throw new Error("Invalid email or password");
       }
@@ -128,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { password: _, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword as User);
       localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+      setLastActivity(Date.now());
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -140,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, resetTimer }}>
       {children}
     </AuthContext.Provider>
   );

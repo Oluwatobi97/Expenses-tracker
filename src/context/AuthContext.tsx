@@ -5,143 +5,142 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { User, LoginCredentials, RegisterCredentials } from "../types/auth";
 
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+interface User {
+  id: string;
+  email: string;
+  password: string;
+  createdAt: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Simple hash function (in a real app, use a proper crypto library)
+const hashPassword = (password: string): string => {
+  return btoa(password); // Base64 encoding (for demo purposes)
+};
+
+// Password validation
+const validatePassword = (password: string): string | null => {
+  if (password.length < 8) {
+    return "Password must be at least 8 characters long";
+  }
+  if (!/[A-Z]/.test(password)) {
+    return "Password must contain at least one uppercase letter";
+  }
+  if (!/[a-z]/.test(password)) {
+    return "Password must contain at least one lowercase letter";
+  }
+  if (!/[0-9]/.test(password)) {
+    return "Password must contain at least one number";
+  }
+  if (!/[!@#$%^&*]/.test(password)) {
+    return "Password must contain at least one special character (!@#$%^&*)";
+  }
+  return null;
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Check for stored user data on mount
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        const userData = JSON.parse(storedUser);
-        setState({
-          user: userData,
-          isAuthenticated: true,
-          isLoading: false,
-        });
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
       } catch (error) {
-        console.error("Error parsing stored user data:", error);
+        console.error("Error parsing stored user:", error);
         localStorage.removeItem("user");
-        setState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
       }
-    } else {
-      setState((prev) => ({ ...prev, isLoading: false }));
     }
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
-    setState((prev) => ({ ...prev, isLoading: true }));
+  const login = async (email: string, password: string) => {
     try {
-      // Get stored users
-      const storedUsers = localStorage.getItem("users");
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-
-      // Find user with matching email
-      const user = users.find((u: User) => u.email === credentials.email);
-
-      if (!user) {
-        throw new Error("Invalid email or password");
+      if (!email || !password) {
+        throw new Error("Email and password are required");
       }
 
-      // In a real app, you would hash the password and compare hashes
-      // For now, we'll just compare the plain text password
-      if (user.password !== credentials.password) {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const hashedPassword = hashPassword(password);
+      const foundUser = users.find(
+        (u: User) => u.email === email && u.password === hashedPassword
+      );
+
+      if (foundUser) {
+        const { password: _, ...userWithoutPassword } = foundUser;
+        setUser(userWithoutPassword as User);
+        localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+      } else {
         throw new Error("Invalid email or password");
       }
-
-      // Remove password from user object before storing
-      const { password, ...userWithoutPassword } = user;
-
-      // Store user data
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-
-      setState({
-        user: userWithoutPassword,
-        isAuthenticated: true,
-        isLoading: false,
-      });
     } catch (error) {
-      setState((prev) => ({ ...prev, isLoading: false }));
+      console.error("Login error:", error);
       throw error;
     }
   };
 
-  const register = async (credentials: RegisterCredentials) => {
-    setState((prev) => ({ ...prev, isLoading: true }));
+  const register = async (email: string, password: string) => {
     try {
-      // Get stored users
-      const storedUsers = localStorage.getItem("users");
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-
-      // Check if email already exists
-      if (users.some((u: User) => u.email === credentials.email)) {
-        throw new Error("Email already registered");
+      if (!email || !password) {
+        throw new Error("Email and password are required");
       }
 
-      // Create new user
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error("Invalid email format");
+      }
+
+      // Validate password
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        throw new Error(passwordError);
+      }
+
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const existingUser = users.find((u: User) => u.email === email);
+
+      if (existingUser) {
+        throw new Error("An account with this email already exists");
+      }
+
+      const hashedPassword = hashPassword(password);
       const newUser: User = {
         id: Math.random().toString(36).substr(2, 9),
-        email: credentials.email,
-        name: credentials.name,
-        password: credentials.password, // In a real app, this would be hashed
+        email,
+        password: hashedPassword,
+        createdAt: new Date().toISOString(),
       };
 
-      // Store new user
-      localStorage.setItem("users", JSON.stringify([...users, newUser]));
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
 
-      // Remove password from user object before storing
-      const { password, ...userWithoutPassword } = newUser;
-
-      // Store user data
+      const { password: _, ...userWithoutPassword } = newUser;
+      setUser(userWithoutPassword as User);
       localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-
-      setState({
-        user: userWithoutPassword,
-        isAuthenticated: true,
-        isLoading: false,
-      });
     } catch (error) {
-      setState((prev) => ({ ...prev, isLoading: false }));
+      console.error("Registration error:", error);
       throw error;
     }
   };
 
   const logout = () => {
+    setUser(null);
     localStorage.removeItem("user");
-    setState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
   };
 
   return (
-    <AuthContext.Provider value={{ user: state.user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

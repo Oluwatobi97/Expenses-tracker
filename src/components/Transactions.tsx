@@ -3,7 +3,7 @@ import TransactionForm from "./TransactionForm";
 import MonthlySummary from "./MonthlySummary";
 import { useState } from "react";
 
-export default function Dashboard() {
+export default function Transactions() {
   const { getMonthlyTransactions } = useTransactions();
   const monthlyTransactions = getMonthlyTransactions();
   const [showForm, setShowForm] = useState(false);
@@ -18,7 +18,7 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Transactions</h1>
         <button
           onClick={() => setShowForm(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"

@@ -1,59 +1,37 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { TransactionProvider } from "./context/TransactionContext";
-import Navigation from "./components/Navigation";
-import LoginForm from "./components/LoginForm";
-import RegisterForm from "./components/RegisterForm";
+import PrivateRoute from "./components/PrivateRoute";
+import Login from "./components/Login";
+import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
-import TransactionList from "./components/TransactionList";
-import { useAuth } from "./context/AuthContext";
-
-function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  return user ? <>{children}</> : <Navigate to="/login" />;
-}
+import Transactions from "./components/Transactions";
+import Analytics from "./components/Analytics";
+import Settings from "./components/Settings";
+import Layout from "./components/Layout";
 
 function App() {
   return (
-    <AuthProvider>
-      <TransactionProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-100">
-            <Navigation />
-            <main className="py-10">
-              <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <Routes>
-                  <Route path="/login" element={<LoginForm />} />
-                  <Route path="/register" element={<RegisterForm />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <PrivateRoute>
-                        <Dashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/transactions"
-                    element={
-                      <PrivateRoute>
-                        <TransactionList />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="/" element={<Navigate to="/dashboard" />} />
-                </Routes>
-              </div>
-            </main>
-          </div>
-        </Router>
-      </TransactionProvider>
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Layout />
+              </PrivateRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

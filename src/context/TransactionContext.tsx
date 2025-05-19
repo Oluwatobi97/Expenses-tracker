@@ -20,8 +20,11 @@ interface TransactionContextType {
   getMonthlySummary: () => {
     totalIncome: number;
     totalExpenses: number;
+    totalSavings: number;
     balance: number;
+    savingsRate: number;
   };
+  getMonthlyTransactions: () => Transaction[];
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(
@@ -83,17 +86,21 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const getMonthlySummary = () => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+  const getMonthlyTransactions = () => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    const monthlyTransactions = transactions.filter((t) => {
-      const transactionDate = new Date(t.date);
+    return transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date);
       return (
-        transactionDate.getMonth() === currentMonth &&
-        transactionDate.getFullYear() === currentYear
+        transactionDate >= firstDayOfMonth && transactionDate <= lastDayOfMonth
       );
     });
+  };
+
+  const getMonthlySummary = () => {
+    const monthlyTransactions = getMonthlyTransactions();
 
     const totalIncome = monthlyTransactions
       .filter((t) => t.type === "income")
@@ -103,10 +110,20 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
 
+    const totalSavings = monthlyTransactions
+      .filter((t) => t.type === "savings")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const balance = totalIncome - totalExpenses - totalSavings;
+    const savingsRate =
+      totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+
     return {
       totalIncome,
       totalExpenses,
-      balance: totalIncome - totalExpenses,
+      totalSavings,
+      balance,
+      savingsRate,
     };
   };
 
@@ -119,6 +136,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         editTransaction,
         deleteTransaction,
         getMonthlySummary,
+        getMonthlyTransactions,
       }}
     >
       {children}

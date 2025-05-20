@@ -1,12 +1,20 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   // Handle scroll effect
   useEffect(() => {
@@ -103,6 +111,14 @@ export default function Navbar() {
                   />
                 </svg>
               )}
+            </button>
+
+            {/* Logout Button - Desktop */}
+            <button
+              onClick={handleLogout}
+              className="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+            >
+              Logout
             </button>
 
             {/* Mobile menu button */}
@@ -210,6 +226,16 @@ export default function Navbar() {
                 </svg>
               )}
             </div>
+          </button>
+          {/* Logout button in mobile menu */}
+          <button
+            onClick={() => {
+              handleLogout();
+              setIsMobileMenuOpen(false);
+            }}
+            className="w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 hover:border-red-300 dark:hover:border-red-700 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+          >
+            Logout
           </button>
         </div>
       </div>

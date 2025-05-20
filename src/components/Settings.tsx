@@ -1,112 +1,111 @@
 import { useTheme } from "../context/ThemeContext";
+import { useState } from "react";
+
+const currencies = [
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+  { code: "INR", symbol: "₹", name: "Indian Rupee" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+  { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
+];
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return localStorage.getItem("currency") || "USD";
+  });
+
+  const handleCurrencyChange = (currencyCode: string) => {
+    setSelectedCurrency(currencyCode);
+    localStorage.setItem("currency", currencyCode);
+  };
+
+  const handleClearData = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to clear all data? This action cannot be undone."
+      )
+    ) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 dark:text-white">Settings</h1>
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Settings</h1>
 
+      <div className="space-y-6">
+        {/* Theme Settings */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="space-y-6">
-            {/* Theme Settings */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Appearance
-              </h2>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    Theme
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Choose between light and dark mode
-                  </p>
-                </div>
-                <button
-                  onClick={toggleTheme}
-                  className="relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  {theme === "dark" ? (
-                    <svg
-                      className="h-7 w-7 text-yellow-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="h-7 w-7 text-gray-700"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Currency Settings */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Currency
-              </h2>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  Default Currency
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Currently set to USD
-                </p>
-              </div>
-            </div>
-
-            {/* Data Management */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Data Management
-              </h2>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Clear All Data
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  This will permanently delete all your transactions and
-                  settings.
-                </p>
-                <button
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Are you sure you want to clear all data? This action cannot be undone."
-                      )
-                    ) {
-                      localStorage.clear();
-                      window.location.reload();
-                    }
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-700 text-sm font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Clear All Data
-                </button>
-              </div>
-            </div>
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">
+            Theme Settings
+          </h2>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700 dark:text-gray-300">Dark Mode</span>
+            <button
+              onClick={toggleTheme}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                theme === "dark" ? "bg-indigo-600" : "bg-gray-200"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  theme === "dark" ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
+        </div>
+
+        {/* Currency Settings */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">
+            Currency Settings
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {currencies.map((currency) => (
+              <button
+                key={currency.code}
+                onClick={() => handleCurrencyChange(currency.code)}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  selectedCurrency === currency.code
+                    ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                    : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {currency.code}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {currency.name}
+                    </div>
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {currency.symbol}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Data Management */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">
+            Data Management
+          </h2>
+          <button
+            onClick={handleClearData}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          >
+            Clear All Data
+          </button>
         </div>
       </div>
     </div>

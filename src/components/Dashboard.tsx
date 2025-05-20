@@ -1,79 +1,78 @@
 import { useTransactions } from "../context/TransactionContext";
-import TransactionForm from "./TransactionForm";
 import MonthlySummary from "./MonthlySummary";
-import { useState } from "react";
 
 export default function Dashboard() {
-  const { getMonthlyTransactions } = useTransactions();
-  const monthlyTransactions = getMonthlyTransactions();
-  const [showForm, setShowForm] = useState(false);
+  const { transactions } = useTransactions();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
+  const totalIncome = transactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalExpenses = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalSavings = transactions
+    .filter((t) => t.type === "savings")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const balance = totalIncome - totalExpenses;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-        >
-          Add Transaction
-        </button>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Dashboard</h1>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Total Income
+          </h3>
+          <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+            ${totalIncome.toFixed(2)}
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Total Expenses
+          </h3>
+          <p className="text-3xl font-bold text-red-600 dark:text-red-400">
+            ${totalExpenses.toFixed(2)}
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Balance
+          </h3>
+          <p
+            className={`text-3xl font-bold ${
+              balance >= 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            ${balance.toFixed(2)}
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Total Savings
+          </h3>
+          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+            ${totalSavings.toFixed(2)}
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <MonthlySummary />
-
-          <div className="mt-6 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Recent Transactions
-            </h2>
-            <div className="space-y-4">
-              {monthlyTransactions.slice(0, 5).map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {transaction.description}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {transaction.category}
-                    </p>
-                  </div>
-                  <span
-                    className={`font-semibold ${
-                      transaction.type === "income"
-                        ? "text-green-600"
-                        : transaction.type === "savings"
-                        ? "text-blue-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {transaction.type === "expense" ? "-" : "+"}
-                    {formatCurrency(transaction.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          {showForm && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <TransactionForm onClose={() => setShowForm(false)} />
-            </div>
-          )}
-        </div>
+      {/* Monthly Summary */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          Monthly Summary
+        </h2>
+        <MonthlySummary />
       </div>
     </div>
   );

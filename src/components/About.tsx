@@ -37,7 +37,7 @@ export default function About() {
                 href="mailto:support@expensetracker.com"
                 className="text-indigo-600 dark:text-indigo-400 hover:underline"
               >
-                support@expensetracker.com
+                victortobi2000@gmail.com
               </a>
             </p>
           </section>

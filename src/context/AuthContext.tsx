@@ -51,12 +51,43 @@ const validatePassword = (password: string): string | null => {
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem("user");
+    const lastActivity = localStorage.getItem("lastActivity");
+
+    if (storedUser && lastActivity) {
+      const now = Date.now();
+      const lastActivityTime = parseInt(lastActivity);
+
+      // Check if the session has expired
+      if (now - lastActivityTime > INACTIVITY_TIMEOUT) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("lastActivity");
+        return null;
+      }
+
+      try {
+        return JSON.parse(storedUser);
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+        localStorage.removeItem("user");
+        localStorage.removeItem("lastActivity");
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [lastActivity, setLastActivity] = useState<number>(() => {
+    const storedTime = localStorage.getItem("lastActivity");
+    return storedTime ? parseInt(storedTime) : Date.now();
+  });
 
   // Reset the timer on user activity
   const resetTimer = () => {
-    setLastActivity(Date.now());
+    const now = Date.now();
+    setLastActivity(now);
+    localStorage.setItem("lastActivity", now.toString());
   };
 
   // Check for inactivity
@@ -93,21 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user, lastActivity]);
 
-  useEffect(() => {
-    // Check for stored user data on mount
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setLastActivity(Date.now());
-      } catch (error) {
-        console.error("Error parsing stored user:", error);
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
-
   const login = async (email: string, password: string) => {
     try {
       if (!email || !password) {
@@ -124,7 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { password: _, ...userWithoutPassword } = foundUser;
         setUser(userWithoutPassword as User);
         localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-        setLastActivity(Date.now());
+        const now = Date.now();
+        setLastActivity(now);
+        localStorage.setItem("lastActivity", now.toString());
       } else {
         throw new Error("Invalid email or password");
       }
@@ -173,7 +191,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { password: _, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword as User);
       localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-      setLastActivity(Date.now());
+      const now = Date.now();
+      setLastActivity(now);
+      localStorage.setItem("lastActivity", now.toString());
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -183,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("lastActivity");
   };
 
   return (

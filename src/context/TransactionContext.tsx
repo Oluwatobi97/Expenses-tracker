@@ -25,6 +25,7 @@ interface TransactionContextType {
     savingsRate: number;
   };
   getMonthlyTransactions: () => Transaction[];
+  updateTransaction: (id: string, transaction: Partial<Transaction>) => void;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(
@@ -127,6 +128,15 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     };
   };
 
+  const updateTransaction = (
+    id: string,
+    updatedTransaction: Partial<Transaction>
+  ) => {
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...updatedTransaction } : t))
+    );
+  };
+
   return (
     <TransactionContext.Provider
       value={{
@@ -137,6 +147,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         deleteTransaction,
         getMonthlySummary,
         getMonthlyTransactions,
+        updateTransaction,
       }}
     >
       {children}

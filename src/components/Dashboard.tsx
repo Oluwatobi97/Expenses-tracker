@@ -1,8 +1,11 @@
 import { useTransactions } from "../context/TransactionContext";
 import MonthlySummary from "./MonthlySummary";
+import TransactionForm from "./TransactionForm";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { transactions } = useTransactions();
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const totalIncome = transactions
     .filter((t) => t.type === "income")
@@ -20,7 +23,15 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 dark:text-white">Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold dark:text-white">Dashboard</h1>
+        <button
+          onClick={() => setIsFormOpen(true)}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Add Transaction
+        </button>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -74,6 +85,9 @@ export default function Dashboard() {
         </h2>
         <MonthlySummary />
       </div>
+
+      {/* Transaction Form Modal */}
+      {isFormOpen && <TransactionForm onClose={() => setIsFormOpen(false)} />}
     </div>
   );
 }

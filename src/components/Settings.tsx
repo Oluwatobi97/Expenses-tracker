@@ -10,6 +10,7 @@ const currencies = [
   { code: "AUD", symbol: "A$", name: "Australian Dollar" },
   { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
   { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
+  { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
 ];
 
 export default function Settings() {

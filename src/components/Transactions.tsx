@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTransactions } from "../context/TransactionContext";
-import TransactionForm from "./TransactionForm";
 
 export default function Transactions() {
   const { transactions } = useTransactions();
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [sortedTransactions, setSortedTransactions] = useState(transactions);
 
   useEffect(() => {
@@ -32,15 +30,7 @@ export default function Transactions() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold dark:text-white">Transactions</h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Add Transaction
-        </button>
-      </div>
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Transactions</h1>
 
       {/* Transaction List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
@@ -101,9 +91,6 @@ export default function Transactions() {
           </table>
         </div>
       </div>
-
-      {/* Modal Form */}
-      {isFormOpen && <TransactionForm onClose={() => setIsFormOpen(false)} />}
     </div>
   );
 }

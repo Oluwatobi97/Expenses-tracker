@@ -61,12 +61,12 @@ export default function TransactionForm({
         ></div>
 
         {/* Modal panel */}
-        <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div className="absolute right-0 top-0 pr-4 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               <span className="sr-only">Close</span>
               <svg
@@ -87,13 +87,13 @@ export default function TransactionForm({
 
           <div className="sm:flex sm:items-start">
             <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-              <h3 className="text-2xl font-semibold leading-6 text-gray-900 mb-6">
+              <h3 className="text-2xl font-semibold leading-6 text-gray-900 dark:text-white mb-6">
                 {transaction ? "Edit" : "Add New"} Transaction
               </h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Type
                     </label>
                     <select
@@ -108,7 +108,7 @@ export default function TransactionForm({
                           category: "", // Reset category when type changes
                         })
                       }
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     >
                       <option value="expense">Expense</option>
                       <option value="income">Income</option>
@@ -117,12 +117,14 @@ export default function TransactionForm({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Amount
                     </label>
                     <div className="relative mt-1 rounded-md shadow-sm">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-gray-500 sm:text-sm">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 sm:text-sm">
+                          $
+                        </span>
                       </div>
                       <input
                         type="number"
@@ -135,20 +137,20 @@ export default function TransactionForm({
                             amount: parseFloat(e.target.value),
                           })
                         }
-                        className={`block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                        className={`block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
                           errors.amount ? "border-red-300" : ""
                         }`}
                       />
                     </div>
                     {errors.amount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.amount}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Date
                     </label>
                     <input
@@ -158,12 +160,12 @@ export default function TransactionForm({
                       onChange={(e) =>
                         setFormData({ ...formData, date: e.target.value })
                       }
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Category
                     </label>
                     <select
@@ -171,7 +173,7 @@ export default function TransactionForm({
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
-                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                      className={`mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
                         errors.category ? "border-red-300" : ""
                       }`}
                     >
@@ -185,7 +187,7 @@ export default function TransactionForm({
                         ))}
                     </select>
                     {errors.category && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.category}
                       </p>
                     )}
@@ -193,7 +195,7 @@ export default function TransactionForm({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Description
                   </label>
                   <textarea
@@ -203,13 +205,13 @@ export default function TransactionForm({
                       setFormData({ ...formData, description: e.target.value })
                     }
                     rows={3}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    className={`mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
                       errors.description ? "border-red-300" : ""
                     }`}
                     placeholder="Enter transaction description..."
                   />
                   {errors.description && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                       {errors.description}
                     </p>
                   )}
@@ -219,7 +221,7 @@ export default function TransactionForm({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   >
                     Cancel
                   </button>

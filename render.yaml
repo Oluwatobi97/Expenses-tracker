@@ -2,14 +2,19 @@ services:
   - type: web
     name: expense-tracker
     env: node
-    rootDir: .
     buildCommand: |
       npm install
+      rm -rf dist
       npm run build:all
+      ls -la dist
+      echo "Build completed. Contents of dist directory:"
+      find dist -type f
     startCommand: node dist/server.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: DB_HOST
         sync: false
       - key: DB_USER
@@ -20,5 +25,3 @@ services:
         sync: false
       - key: DB_PORT
         sync: false
-      - key: PORT
-        value: 10000

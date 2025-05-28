@@ -4,7 +4,7 @@ import {
   LoginCredentials,
   RegisterCredentials,
   AuthContextType,
-} from "../types/auth";
+} from "../types/auth.js";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

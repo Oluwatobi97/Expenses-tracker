@@ -3,7 +3,10 @@ export interface Transaction {
   date: string; // ISO string
   type: "income" | "expense" | "savings";
   amount: number;
-  [key: string]: any;
+  description: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export function getMonthlyTransactions(

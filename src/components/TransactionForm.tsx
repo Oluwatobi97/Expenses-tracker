@@ -1,53 +1,69 @@
 import { useState } from "react";
-import { useTransactions } from "../context/TransactionContext";
-import { Transaction } from "../types";
+import { useTransactions } from "../context/TransactionContext.js";
+import { useAuth } from "../context/AuthContext.js";
+import { Transaction } from "../types/index.js";
 
 interface TransactionFormProps {
   onClose: () => void;
   transaction?: Transaction;
 }
 
+type TransactionFormData = Omit<
+  Transaction,
+  "id" | "created_at" | "updated_at" | "user_id"
+>;
+
 export default function TransactionForm({
   onClose,
   transaction,
 }: TransactionFormProps) {
-  const { addTransaction, editTransaction, categories } = useTransactions();
-  const [formData, setFormData] = useState<Omit<Transaction, "id" | "userId">>(
+  const { addTransaction } = useTransactions();
+  const { user } = useAuth();
+  const [formData, setFormData] = useState<TransactionFormData>(
     transaction || {
       type: "expense",
       amount: 0,
       date: new Date().toISOString().split("T")[0],
-      category: "",
       description: "",
     }
   );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (formData.amount <= 0) {
       newErrors.amount = "Amount must be greater than 0";
     }
-    if (!formData.category) {
-      newErrors.category = "Please select a category";
-    }
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
+    }
+    if (!user?.id) {
+      newErrors.general = "You must be logged in to add transactions";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      if (transaction) {
-        editTransaction(transaction.id, formData);
-      } else {
-        addTransaction(formData);
-      }
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      await addTransaction({
+        ...formData,
+        user_id: user!.id,
+      });
       onClose();
+    } catch (error) {
+      setErrors({
+        general:
+          error instanceof Error ? error.message : "Failed to add transaction",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -88,8 +104,13 @@ export default function TransactionForm({
           <div className="sm:flex sm:items-start">
             <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
               <h3 className="text-2xl font-semibold leading-6 text-gray-900 dark:text-white mb-6">
-                {transaction ? "Edit" : "Add New"} Transaction
+                Add New Transaction
               </h3>
+              {errors.general && (
+                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-md">
+                  {errors.general}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
@@ -101,18 +122,13 @@ export default function TransactionForm({
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          type: e.target.value as
-                            | "income"
-                            | "expense"
-                            | "savings",
-                          category: "", // Reset category when type changes
+                          type: e.target.value as "income" | "expense",
                         })
                       }
                       className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     >
                       <option value="expense">Expense</option>
                       <option value="income">Income</option>
-                      <option value="savings">Savings</option>
                     </select>
                   </div>
 
@@ -129,12 +145,13 @@ export default function TransactionForm({
                       <input
                         type="number"
                         step="0.01"
+                        min="0"
                         required
                         value={formData.amount}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            amount: parseFloat(e.target.value),
+                            amount: parseFloat(e.target.value) || 0,
                           })
                         }
                         className={`block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
@@ -162,35 +179,6 @@ export default function TransactionForm({
                       }
                       className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Category
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      className={`mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                        errors.category ? "border-red-300" : ""
-                      }`}
-                    >
-                      <option value="">Select a category</option>
-                      {categories
-                        .filter((cat) => cat.type === formData.type)
-                        .map((category) => (
-                          <option key={category.id} value={category.name}>
-                            {category.name}
-                          </option>
-                        ))}
-                    </select>
-                    {errors.category && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.category}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -227,9 +215,10 @@ export default function TransactionForm({
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    disabled={isSubmitting}
+                    className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {transaction ? "Update" : "Add"} Transaction
+                    {isSubmitting ? "Adding..." : "Add Transaction"}
                   </button>
                 </div>
               </form>

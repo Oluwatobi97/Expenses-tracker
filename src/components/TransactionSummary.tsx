@@ -1,4 +1,4 @@
-import { useTransactions } from "../context/TransactionContext";
+import { useTransactions } from "../context/TransactionContext.js";
 import {
   PieChart,
   Pie,
@@ -9,10 +9,20 @@ import {
 } from "recharts";
 
 export default function TransactionSummary() {
-  const { getMonthlySummary, getMonthlyTransactions } = useTransactions();
-  const { totalIncome, totalExpenses, totalSavings, balance, savingsRate } =
-    getMonthlySummary();
-  const monthlyTransactions = getMonthlyTransactions();
+  const { transactions } = useTransactions();
+
+  // Calculate totals
+  const totalIncome = transactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const totalSavings = transactions
+    .filter((t) => t.type === "savings")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const balance = totalIncome - totalExpenses;
+  const savingsRate = totalIncome ? (totalSavings / totalIncome) * 100 : 0;
 
   const data = [
     { name: "Income", value: totalIncome, color: "#10B981" },
@@ -20,12 +30,12 @@ export default function TransactionSummary() {
     { name: "Savings", value: totalSavings, color: "#3B82F6" },
   ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+  // Local currency formatter
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(amount);
-  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -97,7 +107,7 @@ export default function TransactionSummary() {
           Monthly Transactions
         </h3>
         <div className="space-y-2">
-          {monthlyTransactions.map((transaction) => (
+          {transactions.map((transaction) => (
             <div
               key={transaction.id}
               className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
@@ -106,7 +116,6 @@ export default function TransactionSummary() {
                 <p className="font-medium text-gray-900">
                   {transaction.description}
                 </p>
-                <p className="text-sm text-gray-500">{transaction.category}</p>
               </div>
               <span
                 className={`font-semibold ${

@@ -1,161 +1,111 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-import { Transaction, Category, defaultCategories } from "../types";
-import { useAuth } from "./AuthContext";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { Transaction } from "../types/index.js";
+import { useAuth } from "./AuthContext.js";
 
 interface TransactionContextType {
   transactions: Transaction[];
-  categories: Category[];
-  addTransaction: (transaction: Omit<Transaction, "id" | "userId">) => void;
-  editTransaction: (
-    id: string,
-    transaction: Omit<Transaction, "id" | "userId">
-  ) => void;
-  deleteTransaction: (id: string) => void;
-  getMonthlySummary: () => {
-    totalIncome: number;
-    totalExpenses: number;
-    totalSavings: number;
-    balance: number;
-    savingsRate: number;
-  };
-  getMonthlyTransactions: () => Transaction[];
-  updateTransaction: (id: string, transaction: Partial<Transaction>) => void;
+  loading: boolean;
+  error: string | null;
+  addTransaction: (
+    transaction: Omit<Transaction, "id" | "created_at" | "updated_at">
+  ) => Promise<void>;
+  refreshTransactions: () => Promise<void>;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(
   undefined
 );
 
-export function TransactionProvider({ children }: { children: ReactNode }) {
+export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories] = useState<Category[]>(defaultCategories);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      const storedTransactions = localStorage.getItem(
-        `transactions_${user.id}`
-      );
-      if (storedTransactions) {
-        setTransactions(JSON.parse(storedTransactions));
-      }
-    } else {
+  const fetchTransactions = async () => {
+    if (!user?.id) {
       setTransactions([]);
+      setLoading(false);
+      return;
     }
-  }, [user]);
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:3001/api/transactions/${user.id}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch transactions");
+      }
+
+      const data = await response.json();
+      setTransactions(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(
-        `transactions_${user.id}`,
-        JSON.stringify(transactions)
-      );
+    fetchTransactions();
+  }, [user?.id]);
+
+  const addTransaction = async (
+    transaction: Omit<Transaction, "id" | "created_at" | "updated_at">
+  ) => {
+    if (!user?.id) {
+      throw new Error("User must be logged in to add transactions");
     }
-  }, [transactions, user]);
 
-  const addTransaction = (transaction: Omit<Transaction, "id" | "userId">) => {
-    if (!user) return;
+    try {
+      const response = await fetch("http://localhost:3001/api/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...transaction,
+          user_id: user.id,
+        }),
+      });
 
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: Math.random().toString(36).substr(2, 9),
-      userId: user.id,
-    };
-    setTransactions((prev) => [...prev, newTransaction]);
-  };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to add transaction");
+      }
 
-  const editTransaction = (
-    id: string,
-    transaction: Omit<Transaction, "id" | "userId">
-  ) => {
-    if (!user) return;
-
-    setTransactions((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...transaction, id, userId: user.id } : t
-      )
-    );
-  };
-
-  const deleteTransaction = (id: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const getMonthlyTransactions = () => {
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    return transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      return (
-        transactionDate >= firstDayOfMonth && transactionDate <= lastDayOfMonth
-      );
-    });
-  };
-
-  const getMonthlySummary = () => {
-    const monthlyTransactions = getMonthlyTransactions();
-
-    const totalIncome = monthlyTransactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalExpenses = monthlyTransactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalSavings = monthlyTransactions
-      .filter((t) => t.type === "savings")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const balance = totalIncome - totalExpenses - totalSavings;
-    const savingsRate =
-      totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
-
-    return {
-      totalIncome,
-      totalExpenses,
-      totalSavings,
-      balance,
-      savingsRate,
-    };
-  };
-
-  const updateTransaction = (
-    id: string,
-    updatedTransaction: Partial<Transaction>
-  ) => {
-    setTransactions((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updatedTransaction } : t))
-    );
+      const newTransaction = await response.json();
+      setTransactions((prev) => [...prev, newTransaction]);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    }
   };
 
   return (
     <TransactionContext.Provider
       value={{
         transactions,
-        categories,
+        loading,
+        error,
         addTransaction,
-        editTransaction,
-        deleteTransaction,
-        getMonthlySummary,
-        getMonthlyTransactions,
-        updateTransaction,
+        refreshTransactions: fetchTransactions,
       }}
     >
       {children}
     </TransactionContext.Provider>
   );
-}
+};
 
-export function useTransactions() {
+export const useTransactions = () => {
   const context = useContext(TransactionContext);
   if (context === undefined) {
     throw new Error(
@@ -163,4 +113,4 @@ export function useTransactions() {
     );
   }
   return context;
-}
+};

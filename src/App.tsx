@@ -4,25 +4,23 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import { TransactionProvider } from "./context/TransactionContext";
-import { ThemeProvider } from "./context/ThemeContext";
-import PrivateRoute from "./components/PrivateRoute";
-import { Suspense, lazy } from "react";
-import Navbar from "./components/Navbar";
-import Layout from "./components/Layout";
+import { AuthProvider } from "./context/AuthContext.js";
+import { TransactionProvider } from "./context/TransactionContext.js";
+import { ThemeProvider } from "./context/ThemeContext.js";
+import PrivateRoute from "./components/PrivateRoute.js";
+import { Suspense } from "react";
+import Navbar from "./components/Navbar.js";
+import Layout from "./components/Layout.js";
+import Login from "./components/Login.js";
+import Register from "./components/Register.js";
+import Dashboard from "./components/Dashboard.js";
+import Transactions from "./components/Transactions.js";
+import Analytics from "./components/Analytics.js";
+import Settings from "./components/Settings.js";
+import Notifications from "./components/Notifications.js";
+import About from "./components/About.js";
 
 // Lazy load components
-const Login = lazy(() => import("./components/Login"));
-const Register = lazy(() => import("./components/Register"));
-const Dashboard = lazy(() => import("./components/Dashboard"));
-const Transactions = lazy(() => import("./components/Transactions"));
-const Analytics = lazy(() => import("./components/Analytics"));
-const Settings = lazy(() => import("./components/Settings"));
-const Notifications = lazy(() => import("./components/Notifications"));
-const About = lazy(() => import("./components/About"));
-
-// Loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -32,9 +30,9 @@ const LoadingSpinner = () => (
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <TransactionProvider>
-          <ThemeProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <TransactionProvider>
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
               <Navbar />
               <Suspense fallback={<LoadingSpinner />}>
@@ -69,9 +67,9 @@ function App() {
                 </Routes>
               </Suspense>
             </div>
-          </ThemeProvider>
-        </TransactionProvider>
-      </AuthProvider>
+          </TransactionProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }

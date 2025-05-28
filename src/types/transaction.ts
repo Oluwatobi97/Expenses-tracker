@@ -1,9 +1,10 @@
 export interface Transaction {
   id: string;
-  userId: string;
   date: string;
   description: string;
   amount: number;
   type: "income" | "expense" | "savings";
-  category: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
 }

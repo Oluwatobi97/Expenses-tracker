@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useTransactions } from "../context/TransactionContext";
-import { getMonthlyTransactions } from "../utils/transactions";
+import { useTransactions } from "../context/TransactionContext.js";
+import { getMonthlyTransactions } from "../utils/transactions.js";
 import {
   PieChart,
   Pie,

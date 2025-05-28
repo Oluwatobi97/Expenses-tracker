@@ -1,7 +1,13 @@
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/ThemeContext.js";
 import { useState } from "react";
 
-const currencies = [
+interface Currency {
+  code: string;
+  symbol: string;
+  name: string;
+}
+
+const currencies: Currency[] = [
   { code: "USD", symbol: "$", name: "US Dollar" },
   { code: "EUR", symbol: "€", name: "Euro" },
   { code: "GBP", symbol: "£", name: "British Pound" },
@@ -13,13 +19,15 @@ const currencies = [
   { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
 ];
 
+type CurrencyCode = (typeof currencies)[number]["code"];
+
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
-  const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem("currency") || "USD";
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(() => {
+    return (localStorage.getItem("currency") as CurrencyCode) || "USD";
   });
 
-  const handleCurrencyChange = (currencyCode: string) => {
+  const handleCurrencyChange = (currencyCode: CurrencyCode) => {
     setSelectedCurrency(currencyCode);
     localStorage.setItem("currency", currencyCode);
   };
@@ -71,7 +79,9 @@ export default function Settings() {
             {currencies.map((currency) => (
               <button
                 key={currency.code}
-                onClick={() => handleCurrencyChange(currency.code)}
+                onClick={() =>
+                  handleCurrencyChange(currency.code as CurrencyCode)
+                }
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedCurrency === currency.code
                     ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"

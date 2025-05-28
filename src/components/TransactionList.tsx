@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Transaction } from "../types";
-import { useTransactions } from "../context/TransactionContext";
-import TransactionForm from "./TransactionForm";
+import { Transaction } from "../types/index.js";
+import { useTransactions } from "../context/TransactionContext.js";
+import TransactionForm from "./TransactionForm.js";
 import { format } from "date-fns";
 
 export default function TransactionList() {
-  const { transactions, deleteTransaction } = useTransactions();
+  const { transactions } = useTransactions();
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
 
@@ -13,11 +13,12 @@ export default function TransactionList() {
     setEditingTransaction(transaction);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this transaction?")) {
-      deleteTransaction(id);
-    }
-  };
+  // Local currency formatter
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
 
   return (
     <div className="space-y-4">
@@ -43,8 +44,7 @@ export default function TransactionList() {
                     {transaction.description}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {format(new Date(transaction.date), "MMM d, yyyy")} -{" "}
-                    {transaction.category}
+                    {format(new Date(transaction.date), "MMM d, yyyy")}
                   </p>
                 </div>
                 <div className="ml-4 flex-shrink-0 flex items-center space-x-4">
@@ -55,8 +55,8 @@ export default function TransactionList() {
                         : "text-red-600"
                     }`}
                   >
-                    {transaction.type === "income" ? "+" : "-"}$
-                    {Math.abs(transaction.amount).toFixed(2)}
+                    {transaction.type === "income" ? "+" : "-"}
+                    {formatCurrency(Math.abs(transaction.amount))}
                   </span>
                   <button
                     onClick={() => handleEdit(transaction)}
@@ -64,12 +64,7 @@ export default function TransactionList() {
                   >
                     Edit
                   </button>
-                  <button
-                    onClick={() => handleDelete(transaction.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                  {/* Delete button removed unless you implement deleteTransaction */}
                 </div>
               </div>
             </li>

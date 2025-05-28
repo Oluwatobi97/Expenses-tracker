@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useTransactions } from "../context/TransactionContext";
+import { useTransactions } from "../context/TransactionContext.js";
+import { Transaction } from "../types/index.js";
 
 interface Notification {
   id: string;
@@ -21,7 +22,7 @@ export default function Notifications() {
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
 
-      const monthlyTransactions = transactions.filter((t) => {
+      const monthlyTransactions = transactions.filter((t: Transaction) => {
         const transactionDate = new Date(t.date);
         return (
           transactionDate.getMonth() === currentMonth &&
@@ -31,16 +32,16 @@ export default function Notifications() {
 
       // Calculate monthly totals
       const monthlyIncome = monthlyTransactions
-        .filter((t) => t.type === "income")
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t: Transaction) => t.type === "income")
+        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 
       const monthlyExpenses = monthlyTransactions
-        .filter((t) => t.type === "expense")
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t: Transaction) => t.type === "expense")
+        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 
       const monthlySavings = monthlyTransactions
-        .filter((t) => t.type === "savings")
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t: Transaction) => t.type === "savings")
+        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 
       // Check if it's the end of the month
       const isEndOfMonth = now.getDate() >= 28;
@@ -90,7 +91,7 @@ export default function Notifications() {
 
       // High expense notification
       const highExpense = monthlyTransactions.find(
-        (t) => t.type === "expense" && t.amount > 1000
+        (t: Transaction) => t.type === "expense" && t.amount > 1000
       );
       if (highExpense) {
         newNotifications.push({

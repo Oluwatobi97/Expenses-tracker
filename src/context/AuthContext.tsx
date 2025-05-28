@@ -1,222 +1,91 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  createdAt: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  resetTimer: () => void;
-}
+  User,
+  LoginCredentials,
+  RegisterCredentials,
+  AuthContextType,
+} from "../types/auth.js";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Simple hash function (in a real app, use a proper crypto library)
-const hashPassword = (password: string): string => {
-  return btoa(password); // Base64 encoding (for demo purposes)
-};
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User | null>(null);
 
-// Password validation
-const validatePassword = (password: string): string | null => {
-  if (password.length < 8) {
-    return "Password must be at least 8 characters long";
-  }
-  if (!/[A-Z]/.test(password)) {
-    return "Password must contain at least one uppercase letter";
-  }
-  if (!/[a-z]/.test(password)) {
-    return "Password must contain at least one lowercase letter";
-  }
-  if (!/[0-9]/.test(password)) {
-    return "Password must contain at least one number";
-  }
-  if (!/[!@#$%^&*]/.test(password)) {
-    return "Password must contain at least one special character (!@#$%^&*)";
-  }
-  return null;
-};
-
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem("user");
-    const lastActivity = localStorage.getItem("lastActivity");
-
-    if (storedUser && lastActivity) {
-      const now = Date.now();
-      const lastActivityTime = parseInt(lastActivity);
-
-      // Check if the session has expired
-      if (now - lastActivityTime > INACTIVITY_TIMEOUT) {
-        localStorage.removeItem("user");
-        localStorage.removeItem("lastActivity");
-        return null;
-      }
-
-      try {
-        return JSON.parse(storedUser);
-      } catch (error) {
-        console.error("Error parsing stored user:", error);
-        localStorage.removeItem("user");
-        localStorage.removeItem("lastActivity");
-        return null;
-      }
-    }
-    return null;
-  });
-
-  const [lastActivity, setLastActivity] = useState<number>(() => {
-    const storedTime = localStorage.getItem("lastActivity");
-    return storedTime ? parseInt(storedTime) : Date.now();
-  });
-
-  // Reset the timer on user activity
-  const resetTimer = () => {
-    const now = Date.now();
-    setLastActivity(now);
-    localStorage.setItem("lastActivity", now.toString());
-  };
-
-  // Check for inactivity
   useEffect(() => {
-    if (!user) return;
+    // Check for stored user data on mount
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
-    const checkInactivity = () => {
-      const now = Date.now();
-      if (now - lastActivity > INACTIVITY_TIMEOUT) {
-        logout();
-      }
-    };
-
-    // Add event listeners for user activity
-    const events = [
-      "mousedown",
-      "mousemove",
-      "keypress",
-      "scroll",
-      "touchstart",
-    ];
-    events.forEach((event) => {
-      window.addEventListener(event, resetTimer);
-    });
-
-    // Check every minute
-    const interval = setInterval(checkInactivity, 60000);
-
-    return () => {
-      events.forEach((event) => {
-        window.removeEventListener(event, resetTimer);
-      });
-      clearInterval(interval);
-    };
-  }, [user, lastActivity]);
-
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      if (!email || !password) {
-        throw new Error("Email and password are required");
+      const response = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid credentials");
       }
 
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const hashedPassword = hashPassword(password);
-      const foundUser = users.find(
-        (u: User) => u.email === email && u.password === hashedPassword
-      );
-
-      if (foundUser) {
-        const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword as User);
-        localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-        const now = Date.now();
-        setLastActivity(now);
-        localStorage.setItem("lastActivity", now.toString());
-      } else {
-        throw new Error("Invalid email or password");
-      }
+      const userData = await response.json();
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Login error:", error);
       throw error;
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (credentials: RegisterCredentials) => {
     try {
-      if (!email || !password) {
-        throw new Error("Email and password are required");
+      const response = await fetch("http://localhost:3001/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        throw new Error("Registration failed");
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error("Invalid email format");
-      }
-
-      // Validate password
-      const passwordError = validatePassword(password);
-      if (passwordError) {
-        throw new Error(passwordError);
-      }
-
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const existingUser = users.find((u: User) => u.email === email);
-
-      if (existingUser) {
-        throw new Error("An account with this email already exists");
-      }
-
-      const hashedPassword = hashPassword(password);
-      const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        email,
-        password: hashedPassword,
-        createdAt: new Date().toISOString(),
-      };
-
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      const { password: _, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword as User);
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-      const now = Date.now();
-      setLastActivity(now);
-      localStorage.setItem("lastActivity", now.toString());
+      const userData = await response.json();
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Registration error:", error);
-      throw error;
+      throw new Error(
+        "Registration failed: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    localStorage.removeItem("lastActivity");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, resetTimer }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

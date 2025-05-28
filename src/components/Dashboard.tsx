@@ -1,25 +1,33 @@
-import { useTransactions } from "../context/TransactionContext";
-import MonthlySummary from "./MonthlySummary";
-import TransactionForm from "./TransactionForm";
+import { useTransactions } from "../context/TransactionContext.js";
+import { Transaction } from "../types/index.js";
+import MonthlySummary from "./MonthlySummary.js";
+import TransactionForm from "./TransactionForm.js";
 import { useState } from "react";
 
 export default function Dashboard() {
   const { transactions } = useTransactions();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
 
-  const totalIncome = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalIncome: number = transactions
+    .filter((t: Transaction) => t.type === "income")
+    .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 
-  const totalExpenses = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses: number = transactions
+    .filter((t: Transaction) => t.type === "expense")
+    .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 
-  const totalSavings = transactions
-    .filter((t) => t.type === "savings")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalSavings: number = transactions
+    .filter((t: Transaction) => t.type === "savings")
+    .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 
-  const balance = totalIncome - totalExpenses;
+  const balance: number = totalIncome - totalExpenses;
+
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -40,7 +48,7 @@ export default function Dashboard() {
             Total Income
           </h3>
           <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-            ${totalIncome.toFixed(2)}
+            {formatCurrency(totalIncome)}
           </p>
         </div>
 
@@ -49,7 +57,7 @@ export default function Dashboard() {
             Total Expenses
           </h3>
           <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-            ${totalExpenses.toFixed(2)}
+            {formatCurrency(totalExpenses)}
           </p>
         </div>
 
@@ -64,7 +72,7 @@ export default function Dashboard() {
                 : "text-red-600 dark:text-red-400"
             }`}
           >
-            ${balance.toFixed(2)}
+            {formatCurrency(balance)}
           </p>
         </div>
 
@@ -73,7 +81,7 @@ export default function Dashboard() {
             Total Savings
           </h3>
           <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-            ${totalSavings.toFixed(2)}
+            {formatCurrency(totalSavings)}
           </p>
         </div>
       </div>
@@ -83,7 +91,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
           Monthly Summary
         </h2>
-        <MonthlySummary />
+        <MonthlySummary transactions={transactions} />
       </div>
 
       {/* Transaction Form Modal */}

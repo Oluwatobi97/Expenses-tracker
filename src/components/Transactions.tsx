@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useTransactions } from "../context/TransactionContext";
+import { useTransactions } from "../context/TransactionContext.js";
+import { Transaction } from "../types/index.js";
 
 export default function Transactions() {
-  const { transactions } = useTransactions();
-  const [sortedTransactions, setSortedTransactions] = useState(transactions);
+  const { transactions, loading, error } = useTransactions();
+  const [sortedTransactions, setSortedTransactions] =
+    useState<Transaction[]>(transactions);
 
   useEffect(() => {
     // Sort transactions by date, most recent first
@@ -27,6 +29,30 @@ export default function Transactions() {
       currency: "USD",
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
+          <strong className="font-bold">Error!</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -53,7 +79,7 @@ export default function Transactions() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {sortedTransactions.map((transaction) => (
+              {sortedTransactions.map((transaction: Transaction) => (
                 <tr key={transaction.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {formatDate(transaction.date)}
@@ -66,9 +92,7 @@ export default function Transactions() {
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         transaction.type === "income"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : transaction.type === "expense"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {transaction.type}
@@ -78,9 +102,7 @@ export default function Transactions() {
                     className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
                       transaction.type === "income"
                         ? "text-green-600 dark:text-green-400"
-                        : transaction.type === "expense"
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-blue-600 dark:text-blue-400"
+                        : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {formatAmount(transaction.amount)}

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: expense-tracker
+    env: node
+    buildCommand: npm install && npm run build:all
+    startCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: PORT
+        value: 10000

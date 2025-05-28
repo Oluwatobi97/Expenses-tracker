@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { RegisterCredentials } from "../types/auth";
+import { useAuth } from "../context/AuthContext.js";
 import { useNavigate, Link } from "react-router-dom";
 
 interface FormErrors {
@@ -10,10 +9,17 @@ interface FormErrors {
   confirmPassword?: string;
 }
 
+interface RegisterFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+}
+
 export default function RegisterForm() {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<RegisterCredentials>({
+  const [formData, setFormData] = useState<RegisterFormData>({
     email: "",
     password: "",
     confirmPassword: "",
@@ -66,7 +72,7 @@ export default function RegisterForm() {
 
     setIsSubmitting(true);
     try {
-      await register(formData.email, formData.password);
+      await register(formData);
       navigate("/dashboard");
     } catch (error) {
       setErrors({
@@ -86,10 +92,10 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Create your account
           </h2>
         </div>
@@ -105,14 +111,18 @@ export default function RegisterForm() {
                 type="text"
                 required
                 className={`appearance-none rounded-t-md relative block w-full px-3 py-3 border ${
-                  errors.name ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  errors.name
+                    ? "border-red-300"
+                    : "border-gray-300 dark:border-gray-600"
+                } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Full Name"
                 value={formData.name}
                 onChange={handleChange}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.name}
+                </p>
               )}
             </div>
             <div>
@@ -125,14 +135,18 @@ export default function RegisterForm() {
                 type="email"
                 required
                 className={`appearance-none relative block w-full px-3 py-3 border ${
-                  errors.email ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  errors.email
+                    ? "border-red-300"
+                    : "border-gray-300 dark:border-gray-600"
+                } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.email}
+                </p>
               )}
             </div>
             <div>
@@ -145,14 +159,18 @@ export default function RegisterForm() {
                 type="password"
                 required
                 className={`appearance-none relative block w-full px-3 py-3 border ${
-                  errors.password ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  errors.password
+                    ? "border-red-300"
+                    : "border-gray-300 dark:border-gray-600"
+                } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.password}
+                </p>
               )}
             </div>
             <div>
@@ -165,14 +183,16 @@ export default function RegisterForm() {
                 type="password"
                 required
                 className={`appearance-none rounded-b-md relative block w-full px-3 py-3 border ${
-                  errors.confirmPassword ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  errors.confirmPassword
+                    ? "border-red-300"
+                    : "border-gray-300 dark:border-gray-600"
+                } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -193,7 +213,7 @@ export default function RegisterForm() {
             </button>
             <Link
               to="/login"
-              className="inline-flex items-center px-4 py-2  text-sm font-light  text-indigo-600  hover:bg-gray-50"
+              className="inline-flex items-center px-4 py-2 text-sm font-light text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               Login
             </Link>

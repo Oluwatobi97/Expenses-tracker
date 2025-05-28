@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: "./", // This ensures assets are loaded correctly
   build: {
-    outDir: "/opt/render/project/src/dist",
+    outDir: "dist",
     assetsDir: "assets",
     sourcemap: true,
   },

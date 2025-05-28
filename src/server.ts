@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, "../dist")));
+app.use(express.static(path.join(__dirname, "dist")));
 
 // Login endpoint
 app.post("/api/auth/login", async (req, res) => {
@@ -117,7 +117,7 @@ app.post("/api/transactions", async (req, res) => {
 
 // Serve index.html for all other routes
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/index.html"));
+  res.sendFile(path.join(__dirname, "dist/index.html"));
 });
 
 app.listen(SERVER_CONFIG.PORT, () => {

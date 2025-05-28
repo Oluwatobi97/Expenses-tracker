@@ -2,7 +2,11 @@ services:
   - type: web
     name: expense-tracker
     env: node
-    buildCommand: npm install && npm run build:all
+    buildCommand: |
+      npm install
+      npm run build:all
+      mkdir -p dist
+      cp -r dist/* dist/
     startCommand: node dist/server.js
     envVars:
       - key: NODE_ENV

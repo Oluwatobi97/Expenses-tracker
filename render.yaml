@@ -2,9 +2,10 @@ services:
   - type: web
     name: expense-tracker
     env: node
+    rootDir: .
     buildCommand: |
       npm install
-      rm -rf dist
+      mkdir -p dist
       npm run build:all
       ls -la dist
       echo "Build completed. Contents of dist directory:"

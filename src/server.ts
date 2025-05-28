@@ -20,8 +20,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, "dist")));
+// Determine the correct path for static files
+const staticPath =
+  process.env.NODE_ENV === "production"
+    ? path.join(__dirname, "..", "dist")
+    : path.join(__dirname, "dist");
+
+console.log("Static files path:", staticPath);
+
+// Serve static files
+app.use(express.static(staticPath));
 
 // Login endpoint
 app.post("/api/auth/login", async (req, res) => {
@@ -117,9 +125,14 @@ app.post("/api/transactions", async (req, res) => {
 
 // Serve index.html for all other routes
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(__dirname, "dist/index.html"));
+  const indexPath = path.join(staticPath, "index.html");
+  console.log("Serving index.html from:", indexPath);
+  res.sendFile(indexPath);
 });
 
-app.listen(SERVER_CONFIG.PORT, () => {
-  console.log(`Server running on port ${SERVER_CONFIG.PORT}`);
+const port = process.env.PORT || SERVER_CONFIG.PORT;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Static files directory: ${staticPath}`);
 });

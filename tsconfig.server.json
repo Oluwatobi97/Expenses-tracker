@@ -7,7 +7,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist",
+    "outDir": "/opt/render/project/src/dist",
     "rootDir": "src",
     "allowJs": true,
     "resolveJsonModule": true,

@@ -5,9 +5,9 @@ services:
     buildCommand: |
       npm install
       npm run build:all
-      mkdir -p dist
-      cp -r dist/* dist/
-    startCommand: node dist/server.js
+      mkdir -p /opt/render/project/src/dist
+      cp -r dist/* /opt/render/project/src/dist/
+    startCommand: node /opt/render/project/src/dist/server.js
     envVars:
       - key: NODE_ENV
         value: production

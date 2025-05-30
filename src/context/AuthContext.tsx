@@ -23,7 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      const response = await fetch("http://localhost:3001/api/auth/login", {
+      // Use a relative path for API calls
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -46,7 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const register = async (credentials: RegisterCredentials) => {
     try {
-      const response = await fetch("http://localhost:3001/api/auth/register", {
+      // Use a relative path for API calls
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

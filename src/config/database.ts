@@ -1,26 +1,25 @@
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const pool = mysql.createPool({
+const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
+  user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "my_expenses_tracker",
-  port: parseInt(process.env.DB_PORT || "3306"),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  database: process.env.DB_NAME || "my_expenses_tracker_pg",
+  port: parseInt(process.env.DB_PORT || "5432"),
 });
 
 // Test database connection
 export const testConnection = async () => {
   try {
-    await pool.query("SELECT 1");
-    console.log("✅ MySQL connection successful");
+    const client = await pool.connect();
+    await client.query("SELECT 1");
+    client.release();
+    console.log("✅ PostgreSQL connection successful");
   } catch (err) {
-    console.error("❌ MySQL connection failed:", err);
+    console.error("❌ PostgreSQL connection failed:", err);
   }
 };
 

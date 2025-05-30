@@ -87,29 +87,35 @@ app.post("/api/auth/login", async (req, res) => {
 
 // Register endpoint
 app.post("/api/auth/register", async (req, res) => {
-  let client: PoolClient | undefined;
-  try {
-    client = await pool.connect();
-    const { email, name, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const { username, email, password } = req.body;
+  console.log("Registration attempt for:", { username, email }); // Log registration attempt
 
-    const result: QueryResult = await client.query(
-      "INSERT INTO users (email, name, password) VALUES ($1, $2, $3) RETURNING id",
-      [email, name, hashedPassword]
+  try {
+    // Check if user already exists
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE username = $1 OR email = $2",
+      [username, email]
     );
 
-    res.status(201).json({
-      id: result.rows[0].id,
-      email,
-      name,
-    });
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  } finally {
-    if (client) {
-      client.release();
+    if (userResult.rows.length > 0) {
+      console.log("User already exists:", { username, email }); // Log duplicate user
+      return res.status(400).json({ message: "User already exists" });
     }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const result = await pool.query(
+      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
+      [username, email, hashedPassword]
+    );
+
+    console.log("User registered successfully:", result.rows[0]); // Log successful registration
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Registration error details:", error); // Log detailed error
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

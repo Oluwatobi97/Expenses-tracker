@@ -87,18 +87,18 @@ app.post("/api/auth/login", async (req, res) => {
 
 // Register endpoint
 app.post("/api/auth/register", async (req, res) => {
-  const { username, email, password } = req.body;
-  console.log("Registration attempt for:", { username, email }); // Log registration attempt
+  const { username: name, email, password } = req.body;
+  console.log("Registration attempt for:", { name, email }); // Log registration attempt
 
   try {
     // Check if user already exists
     const userResult = await pool.query(
-      "SELECT * FROM users WHERE username = $1 OR email = $2",
-      [username, email]
+      "SELECT * FROM users WHERE name = $1 OR email = $2",
+      [name, email]
     );
 
     if (userResult.rows.length > 0) {
-      console.log("User already exists:", { username, email }); // Log duplicate user
+      console.log("User already exists:", { name, email }); // Log duplicate user
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -107,8 +107,8 @@ app.post("/api/auth/register", async (req, res) => {
 
     // Create user
     const result = await pool.query(
-      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
-      [username, email, hashedPassword]
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
+      [name, email, hashedPassword]
     );
 
     console.log("User registered successfully:", result.rows[0]); // Log successful registration

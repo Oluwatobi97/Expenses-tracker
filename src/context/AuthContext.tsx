@@ -33,7 +33,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Invalid credentials");
+        // Attempt to read error message from backend response
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || "Invalid credentials");
       }
 
       const userData = await response.json();
@@ -57,7 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Registration failed");
+        // Attempt to read error message from backend response
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: response.statusText }));
+        throw new Error(
+          "Registration failed: " + (errorData.message || response.statusText)
+        );
       }
 
       const userData = await response.json();

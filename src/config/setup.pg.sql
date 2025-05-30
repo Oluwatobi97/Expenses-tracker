@@ -3,27 +3,28 @@ DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS users;
 
 -- Create users table
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create transactions table
-CREATE TABLE transactions (
-    id SERIAL PRIMARY KEY, -- Use SERIAL for auto-incrementing integer ID
-    user_id UUID NOT NULL, -- Assuming user_id is UUID based on users table
-    type VARCHAR(50) NOT NULL CHECK (type IN ('income', 'expense')), -- Use VARCHAR with CHECK constraint for simple enum
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    type VARCHAR(50) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
-    date DATE NOT NULL,
-    description TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 
 -- Optional: Create a trigger to update the updated_at column on update
 -- This is the PostgreSQL equivalent of MySQL's ON UPDATE CURRENT_TIMESTAMP

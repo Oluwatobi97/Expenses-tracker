@@ -73,6 +73,7 @@ async function testDbConnection() {
 async function startServer() {
   try {
     console.log("Starting server initialization...");
+    console.log("Environment:", process.env.NODE_ENV);
 
     // Test database connection
     await testDbConnection();
@@ -86,6 +87,7 @@ async function startServer() {
     // Start server
     const port = process.env.PORT || SERVER_CONFIG.PORT;
     app.listen(port, () => {
+      console.log("=== Server Started Successfully ===");
       console.log(`Server running on port ${port}`);
       console.log(`Environment: ${process.env.NODE_ENV}`);
       console.log(
@@ -93,6 +95,7 @@ async function startServer() {
           isDatabaseConnected ? "Connected" : "Disconnected"
         }`
       );
+      console.log("=================================");
     });
   } catch (error) {
     console.error("Server initialization failed:", error);

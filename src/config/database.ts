@@ -10,22 +10,47 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from the root directory
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-// Verify environment variables
-if (!process.env.DB_PASSWORD) {
-  throw new Error("DB_PASSWORD is not set in .env file");
-}
+// Log all relevant environment variables (masking sensitive data)
+console.log("Environment variables check:", {
+  NODE_ENV: process.env.NODE_ENV,
+  DB_HOST: process.env.DB_HOST,
+  DB_NAME: process.env.DB_NAME,
+  DB_USER: process.env.DB_USER,
+  DB_PORT: process.env.DB_PORT,
+  DB_PASSWORD_SET: !!process.env.DB_PASSWORD,
+  SSL_ENABLED: process.env.NODE_ENV === "production",
+});
 
+// Database configuration using environment variables
 const dbConfig = {
-  user: "postgres",
-  host: "localhost",
-  database: "expense_tracker",
+  user: process.env.DB_USER || "postgres",
+  host: process.env.DB_HOST || "localhost",
+  database: process.env.DB_NAME || "expense_tracker",
   password: process.env.DB_PASSWORD,
-  port: 5432,
+  port: parseInt(process.env.DB_PORT || "5432"),
+  // Add SSL configuration for production
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? {
+          rejectUnauthorized: false, // Required for some cloud providers
+        }
+      : undefined,
 };
+
+// Verify required environment variables
+const requiredEnvVars = ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD"];
+const missingEnvVars = requiredEnvVars.filter(
+  (varName) => !process.env[varName]
+);
+
+if (missingEnvVars.length > 0) {
+  console.error("Missing required environment variables:", missingEnvVars);
+}
 
 console.log("Database configuration:", {
   ...dbConfig,
   password: "****", // Mask the password in logs
+  ssl: dbConfig.ssl ? "enabled" : "disabled",
 });
 
 const pool = new Pool(dbConfig);
@@ -38,6 +63,7 @@ export const testConnection = async () => {
     console.log("Connection details:", {
       ...dbConfig,
       password: "****",
+      ssl: dbConfig.ssl ? "enabled" : "disabled",
     });
 
     console.log("Attempting to connect to PostgreSQL...");

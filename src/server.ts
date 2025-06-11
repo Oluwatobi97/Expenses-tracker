@@ -152,12 +152,29 @@ app.get("/api/test-db", async (_req, res) => {
   }
 });
 
+// Add a test endpoint to verify server is running
+app.get("/api/test", (_req, res) => {
+  res.json({
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+    database: isDatabaseConnected ? "Connected" : "Disconnected",
+  });
+});
+
 // Login endpoint
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   console.log("Login attempt for:", { email });
 
   try {
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["email", "password"],
+      });
+    }
+
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
@@ -183,6 +200,7 @@ app.post("/api/auth/login", async (req, res) => {
 
     console.log("User logged in successfully:", { email });
     res.json({
+      message: "Login successful",
       token,
       user: {
         id: user.id,
@@ -190,9 +208,12 @@ app.post("/api/auth/login", async (req, res) => {
         email: user.email,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Login error details:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      message: "Login failed",
+      error: error?.message || "Unknown error",
+    });
   }
 });
 
@@ -202,6 +223,14 @@ app.post("/api/auth/register", async (req, res) => {
   console.log("Registration attempt for:", { name, email });
 
   try {
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["username", "email", "password"],
+      });
+    }
+
     // Check if user already exists
     const userResult = await pool.query(
       "SELECT * FROM users WHERE name = $1 OR email = $2",
@@ -210,7 +239,10 @@ app.post("/api/auth/register", async (req, res) => {
 
     if (userResult.rows.length > 0) {
       console.log("User already exists:", { name, email });
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({
+        message: "User already exists",
+        field: userResult.rows[0].email === email ? "email" : "username",
+      });
     }
 
     // Hash password
@@ -223,11 +255,14 @@ app.post("/api/auth/register", async (req, res) => {
     );
 
     console.log("User registered successfully:", result.rows[0]);
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      message: "Registration successful",
+      user: result.rows[0],
+    });
   } catch (error: any) {
     console.error("Registration error details:", error);
     res.status(500).json({
-      message: "Internal server error",
+      message: "Registration failed",
       error: error?.message || "Unknown error",
     });
   }

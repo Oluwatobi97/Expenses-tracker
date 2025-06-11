@@ -1,25 +1,110 @@
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { pool, testConnection } from "./config/database.js";
+import pool, { testConnection } from "./config/database.js";
 import { PoolClient, QueryResult } from "pg";
 import { SERVER_CONFIG } from "./config/server.config.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 
+// Get the directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// Load environment variables from the root directory
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-// Test database connection
-testConnection();
+// Debug: Log environment variables (excluding sensitive data)
+console.log("Environment check:", {
+  NODE_ENV: process.env.NODE_ENV,
+  DB_PASSWORD_SET: !!process.env.DB_PASSWORD,
+  PORT: process.env.PORT,
+  JWT_SECRET_SET: !!process.env.JWT_SECRET,
+});
+
+// Handle unhandled rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("=== Unhandled Rejection Details ===");
+  console.error("Promise:", promise);
+  console.error("Reason type:", typeof reason);
+  console.error("Reason:", reason);
+  if (reason instanceof Error) {
+    console.error("Error name:", reason.name);
+    console.error("Error message:", reason.message);
+    console.error("Error stack:", reason.stack);
+  } else if (typeof reason === "object") {
+    console.error("Reason object:", JSON.stringify(reason, null, 2));
+  }
+  console.error("=================================");
+});
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Initialize database connection
+let isDatabaseConnected = false;
+
+// Test database connection
+async function testDbConnection() {
+  let client;
+  try {
+    console.log("Testing database connection...");
+    client = await pool.connect();
+    const result = await client.query("SELECT NOW()");
+    console.log("Database connection successful:", result.rows[0]);
+    isDatabaseConnected = true;
+  } catch (err) {
+    console.error("Database connection failed:", err);
+    isDatabaseConnected = false;
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
+// Initialize server
+async function startServer() {
+  try {
+    console.log("Starting server initialization...");
+
+    // Test database connection
+    await testDbConnection();
+
+    if (!isDatabaseConnected) {
+      console.error(
+        "Failed to connect to database. Server will start but database features will be unavailable."
+      );
+    }
+
+    // Start server
+    const port = process.env.PORT || SERVER_CONFIG.PORT;
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
+      console.log(
+        `Database connection status: ${
+          isDatabaseConnected ? "Connected" : "Disconnected"
+        }`
+      );
+    });
+  } catch (error) {
+    console.error("Server initialization failed:", error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error("Fatal error during server startup:", error);
+  process.exit(1);
+});
 
 // Debug information
 console.log("Current directory:", process.cwd());
@@ -37,7 +122,6 @@ console.log("Static files path:", staticPath);
 // Check if directory exists
 if (fs.existsSync(staticPath)) {
   console.log("Static directory exists");
-  // console.log('Contents of static directory:', fs.readdirSync(staticPath)); // Avoid listing too many files in logs
 } else {
   console.error("Static directory does not exist!");
 }
@@ -45,39 +129,22 @@ if (fs.existsSync(staticPath)) {
 // Serve static files
 app.use(express.static(staticPath));
 
-// Login endpoint
-app.post("/api/auth/login", async (req, res) => {
-  let client: PoolClient | undefined;
+// Add a test endpoint to verify database connection
+app.get("/api/test-db", async (_req, res) => {
+  let client: PoolClient | null = null;
   try {
     client = await pool.connect();
-    const { email, password } = req.body;
-    const result: QueryResult = await client.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
-    const users = result.rows;
-
-    if (users.length === 0) {
-      res.status(401).json({ message: "Invalid credentials" });
-      return;
-    }
-
-    const user = users[0];
-    const validPassword = await bcrypt.compare(password, user.password);
-
-    if (!validPassword) {
-      res.status(401).json({ message: "Invalid credentials" });
-      return;
-    }
-
+    const result = await client.query("SELECT NOW() as current_time");
     res.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
+      message: "Database connection successful",
+      timestamp: result.rows[0].current_time,
     });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (error: any) {
+    console.error("Database test error:", error);
+    res.status(500).json({
+      message: "Database connection failed",
+      error: error?.message || "Unknown error",
+    });
   } finally {
     if (client) {
       client.release();
@@ -85,10 +152,54 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// Login endpoint
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  console.log("Login attempt for:", { email });
+
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+
+    if (result.rows.length === 0) {
+      console.log("User not found:", { email });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password);
+
+    if (!validPassword) {
+      console.log("Invalid password for user:", { email });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET || "your_jwt_secret_key_here",
+      { expiresIn: "24h" }
+    );
+
+    console.log("User logged in successfully:", { email });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Login error details:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // Register endpoint
 app.post("/api/auth/register", async (req, res) => {
   const { username: name, email, password } = req.body;
-  console.log("Registration attempt for:", { name, email }); // Log registration attempt
+  console.log("Registration attempt for:", { name, email });
 
   try {
     // Check if user already exists
@@ -98,7 +209,7 @@ app.post("/api/auth/register", async (req, res) => {
     );
 
     if (userResult.rows.length > 0) {
-      console.log("User already exists:", { name, email }); // Log duplicate user
+      console.log("User already exists:", { name, email });
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -111,21 +222,24 @@ app.post("/api/auth/register", async (req, res) => {
       [name, email, hashedPassword]
     );
 
-    console.log("User registered successfully:", result.rows[0]); // Log successful registration
+    console.log("User registered successfully:", result.rows[0]);
     res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error("Registration error details:", error); // Log detailed error
-    res.status(500).json({ message: "Internal server error" });
+  } catch (error: any) {
+    console.error("Registration error details:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error?.message || "Unknown error",
+    });
   }
 });
 
 // Get transactions endpoint
 app.get("/api/transactions/:userId", async (req, res) => {
-  let client: PoolClient | undefined;
+  let client: PoolClient | null = null;
   try {
     client = await pool.connect();
     const { userId } = req.params;
-    const result: QueryResult = await client.query(
+    const result = await client.query(
       "SELECT * FROM transactions WHERE user_id = $1 ORDER BY date DESC",
       [userId]
     );
@@ -142,11 +256,11 @@ app.get("/api/transactions/:userId", async (req, res) => {
 
 // Add transaction endpoint
 app.post("/api/transactions", async (req, res) => {
-  let client: PoolClient | undefined;
+  let client: PoolClient | null = null;
   try {
     client = await pool.connect();
     const { user_id, type, amount, date, description } = req.body;
-    const result: QueryResult = await client.query(
+    const result = await client.query(
       "INSERT INTO transactions (user_id, type, amount, date, description) VALUES ($1, $2, $3, $4, $5) RETURNING id",
       [user_id, type, amount, date, description]
     );
@@ -180,11 +294,4 @@ app.get("*", (_req, res) => {
     console.error("index.html not found!");
     res.status(404).send("index.html not found");
   }
-});
-
-const port = process.env.PORT || SERVER_CONFIG.PORT;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Static files directory: ${staticPath}`);
 });

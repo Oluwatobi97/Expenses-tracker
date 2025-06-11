@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "build:all": "rimraf dist && npm run build && npm run build:server",
+    "build:all": "rm -rf dist && npm run build && npm run build:server",
     "start": "node dist/server/index.js",
     "start:dev": "cross-env NODE_OPTIONS=\"--loader ts-node/esm\" ts-node --esm src/server.ts",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

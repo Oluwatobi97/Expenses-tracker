@@ -35,6 +35,10 @@ const dbConfig = {
           rejectUnauthorized: false, // Required for some cloud providers
         }
       : undefined,
+  // Add connection timeout
+  connectionTimeoutMillis: 10000, // 10 seconds
+  // Add idle timeout
+  idleTimeoutMillis: 30000, // 30 seconds
 };
 
 // Verify required environment variables
@@ -45,6 +49,9 @@ const missingEnvVars = requiredEnvVars.filter(
 
 if (missingEnvVars.length > 0) {
   console.error("Missing required environment variables:", missingEnvVars);
+  throw new Error(
+    `Missing required environment variables: ${missingEnvVars.join(", ")}`
+  );
 }
 
 console.log("Database configuration:", {
@@ -54,6 +61,44 @@ console.log("Database configuration:", {
 });
 
 const pool = new Pool(dbConfig);
+
+// Retry connection function
+const retryConnection = async (maxRetries = 5, delay = 5000) => {
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      console.log(
+        `Attempting database connection (attempt ${
+          retries + 1
+        }/${maxRetries})...`
+      );
+      const client = await pool.connect();
+      console.log("✅ Database connection successful!");
+      client.release();
+      return true;
+    } catch (err: any) {
+      retries++;
+      console.error(`Database connection attempt ${retries} failed:`, {
+        error: err.message,
+        code: err.code,
+        host: dbConfig.host,
+        database: dbConfig.database,
+        user: dbConfig.user,
+      });
+
+      if (retries === maxRetries) {
+        console.error("Max retries reached. Could not connect to database.");
+        throw err;
+      }
+
+      console.log(`Retrying in ${delay / 1000} seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  return false;
+};
 
 // Test database connection
 export const testConnection = async () => {
@@ -65,6 +110,9 @@ export const testConnection = async () => {
       password: "****",
       ssl: dbConfig.ssl ? "enabled" : "disabled",
     });
+
+    // Try to establish connection with retries
+    await retryConnection();
 
     console.log("Attempting to connect to PostgreSQL...");
     client = await pool.connect();
@@ -132,7 +180,8 @@ pool.on("error", (err: any) => {
     stack: err?.stack,
   });
   console.error("=================");
-  process.exit(-1);
+  // Don't exit the process, just log the error
+  // process.exit(-1);
 });
 
 export default pool;

@@ -51,13 +51,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const register = async (credentials: RegisterCredentials) => {
     try {
+      // Transform the data to match backend expectations
+      const registerData = {
+        username: credentials.name,
+        email: credentials.email,
+        password: credentials.password,
+      };
+
       // Use a relative path for API calls
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(registerData),
       });
 
       if (!response.ok) {

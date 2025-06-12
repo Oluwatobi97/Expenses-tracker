@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -133,7 +133,7 @@ if (fs.existsSync(staticPath)) {
 app.use(express.static(staticPath));
 
 // Add a test endpoint to verify database connection
-app.get("/api/test-db", async (_req, res) => {
+app.get("/api/test-db", async (_req: Request, res: Response) => {
   let client: PoolClient | null = null;
   try {
     client = await pool.connect();
@@ -156,7 +156,7 @@ app.get("/api/test-db", async (_req, res) => {
 });
 
 // Add a test endpoint to verify server is running
-app.get("/api/test", (_req, res) => {
+app.get("/api/test", (_req: Request, res: Response) => {
   res.json({
     message: "Server is running",
     timestamp: new Date().toISOString(),
@@ -165,7 +165,7 @@ app.get("/api/test", (_req, res) => {
 });
 
 // Login endpoint
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", async (req: Request, res: Response) => {
   const { email, password } = req.body;
   console.log("Login attempt for:", { email });
 
@@ -221,7 +221,7 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 // Register endpoint
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", async (req: Request, res: Response) => {
   const { username: name, email, password } = req.body;
   console.log("Registration attempt for:", { name, email });
 
@@ -272,7 +272,7 @@ app.post("/api/auth/register", async (req, res) => {
 });
 
 // Get transactions endpoint
-app.get("/api/transactions/:userId", async (req, res) => {
+app.get("/api/transactions/:userId", async (req: Request, res: Response) => {
   let client: PoolClient | null = null;
   try {
     client = await pool.connect();
@@ -293,7 +293,7 @@ app.get("/api/transactions/:userId", async (req, res) => {
 });
 
 // Add transaction endpoint
-app.post("/api/transactions", async (req, res) => {
+app.post("/api/transactions", async (req: Request, res: Response) => {
   let client: PoolClient | null = null;
   try {
     client = await pool.connect();
@@ -321,7 +321,7 @@ app.post("/api/transactions", async (req, res) => {
 });
 
 // Serve index.html for all other routes
-app.get("*", (_req, res) => {
+app.get("*", (_req: Request, res: Response) => {
   const indexPath = path.join(staticPath, "index.html");
   console.log("Attempting to serve index.html from:", indexPath);
 

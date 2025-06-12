@@ -25,12 +25,16 @@ export async function runMigrations() {
     // Start transaction
     await client.query("BEGIN");
 
-    // Read and execute migration file
+    // Determine the correct path for migration files
+    const isProduction = process.env.NODE_ENV === "production";
+    const baseDir = isProduction ? process.cwd() : __dirname;
     const migrationPath = path.join(
-      __dirname,
-      "migrations",
+      baseDir,
+      isProduction ? "dist/db/migrations" : "migrations",
       "001_initial_schema.sql"
     );
+
+    console.log("Looking for migration file at:", migrationPath);
     const migrationSQL = fs.readFileSync(migrationPath, "utf8");
 
     console.log("Running migration...");

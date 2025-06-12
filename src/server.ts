@@ -244,6 +244,7 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
   try {
     // Validate input
     if (!name || !email || !password) {
+      console.log("Missing required fields:", { name, email, password });
       return res.status(400).json({
         message: "Missing required fields",
         required: ["username", "email", "password"],
@@ -279,10 +280,16 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
       user: result.rows[0],
     });
   } catch (error: any) {
-    console.error("Registration error details:", error);
+    console.error("Registration error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack,
+    });
     res.status(500).json({
       message: "Registration failed",
-      error: error?.message || "Unknown error",
+      error: error.message || "Unknown error",
+      details: error.detail || null,
     });
   }
 });

@@ -1,50 +1,18 @@
-import { Transaction } from "../types/index.js";
+// import { Transaction } from "../types/index.js";
 
 interface MonthlySummaryProps {
-  transactions: Transaction[];
+  totalIncome: number;
+  totalExpenses: number;
+  totalSavings: number;
 }
 
-export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
-  const getMonthlySummary = () => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-
-    const monthlyTransactions = transactions.filter((t) => {
-      const transactionDate = new Date(t.date);
-      return (
-        transactionDate.getMonth() === currentMonth &&
-        transactionDate.getFullYear() === currentYear
-      );
-    });
-
-    const totalIncome = monthlyTransactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalExpenses = monthlyTransactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalSavings = monthlyTransactions
-      .filter((t) => t.type === "savings")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const balance = totalIncome - totalExpenses;
-    const savingsRate =
-      totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
-
-    return {
-      totalIncome,
-      totalExpenses,
-      totalSavings,
-      balance,
-      savingsRate,
-    };
-  };
-
-  const { totalIncome, totalExpenses, totalSavings, balance, savingsRate } =
-    getMonthlySummary();
+export const MonthlySummary = ({
+  totalIncome,
+  totalExpenses,
+  totalSavings,
+}: MonthlySummaryProps) => {
+  const balance = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -110,4 +78,4 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
       </div>
     </div>
   );
-}
+};

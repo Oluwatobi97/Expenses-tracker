@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export const Dashboard = () => {
   const { loading, error } = useTransactions();
+  const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -76,7 +77,16 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div>
           <h2 className="text-xl font-semibold mb-4">Add Transaction</h2>
-          <TransactionForm onClose={() => {}} />
+          {showTransactionForm ? (
+            <TransactionForm onClose={() => setShowTransactionForm(false)} />
+          ) : (
+            <button
+              onClick={() => setShowTransactionForm(true)}
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Add New Transaction
+            </button>
+          )}
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>

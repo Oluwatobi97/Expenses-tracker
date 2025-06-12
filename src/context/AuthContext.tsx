@@ -7,6 +7,7 @@ import {
 } from "../types/auth.js";
 
 const API_URL = "http://localhost:3000/api";
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -15,6 +16,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+
+  // Function to update last activity time
+  const updateLastActivity = () => {
+    setLastActivity(Date.now());
+  };
+
+  // Add event listeners for user activity
+  useEffect(() => {
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
+
+    const handleUserActivity = () => {
+      updateLastActivity();
+    };
+
+    events.forEach((event) => {
+      window.addEventListener(event, handleUserActivity);
+    });
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, handleUserActivity);
+      });
+    };
+  }, []);
+
+  // Check for session timeout
+  useEffect(() => {
+    const checkSessionTimeout = () => {
+      if (user && Date.now() - lastActivity > SESSION_TIMEOUT) {
+        logout();
+      }
+    };
+
+    const intervalId = setInterval(checkSessionTimeout, 1000);
+    return () => clearInterval(intervalId);
+  }, [user, lastActivity]);
 
   useEffect(() => {
     // Check for stored user data on mount
@@ -27,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const tokenData = JSON.parse(atob(parsedUser.token.split(".")[1]));
           if (tokenData.exp * 1000 > Date.now()) {
             setUser(parsedUser);
+            setLastActivity(Date.now());
           } else {
             localStorage.removeItem("user");
           }
@@ -65,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       setUser(userData);
+      setLastActivity(Date.now());
       localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Login error:", error);
@@ -102,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       setUser(userData);
+      setLastActivity(Date.now());
       localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Registration error:", error);

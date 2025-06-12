@@ -34,7 +34,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:3001/api/transactions/${user.id}`
+        `http://localhost:3000/api/transactions/${user.id}`
       );
 
       if (!response.ok) {
@@ -65,7 +65,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      const response = await fetch("http://localhost:3001/api/transactions", {
+      const response = await fetch("http://localhost:3000/api/transactions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

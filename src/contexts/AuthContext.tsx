@@ -12,36 +12,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check for stored user data on mount
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Check if token is expired
+        if (parsedUser.token) {
+          const tokenData = JSON.parse(atob(parsedUser.token.split(".")[1]));
+          if (tokenData.exp * 1000 > Date.now()) {
+            setUser(parsedUser);
+          } else {
+            localStorage.removeItem("user");
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem("user");
+      }
     }
+    setLoading(false);
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      // Get stored users
-      const storedUsers = localStorage.getItem("users");
-      const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
 
-      // Find user by email
-      const user = users.find((u) => u.email === credentials.email);
-      if (!user) {
-        throw new Error("User not found");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
       }
 
-      // Verify password
-      if (user.password !== credentials.password) {
-        throw new Error("Invalid password");
-      }
-
-      // Remove password before storing in state
-      const { password, ...userWithoutPassword } = user;
-      setUser(userWithoutPassword);
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+      const data = await response.json();
+      const userData = { ...data.user, token: data.token };
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -50,31 +64,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const register = async (credentials: RegisterCredentials) => {
     try {
-      // Get stored users
-      const storedUsers = localStorage.getItem("users");
-      const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
+      const response = await fetch("http://localhost:3000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
 
-      // Check if user already exists
-      if (users.some((u) => u.email === credentials.email)) {
-        throw new Error("User already exists");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Registration failed");
       }
 
-      // Create new user
-      const newUser: User = {
-        id: Date.now().toString(),
-        email: credentials.email,
-        name: credentials.name,
-        password: credentials.password,
-      };
-
-      // Save user
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      // Remove password before storing in state
-      const { password, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+      const data = await response.json();
+      const userData = { ...data.user, token: data.token };
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -87,7 +93,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

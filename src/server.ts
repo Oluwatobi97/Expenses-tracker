@@ -227,7 +227,7 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET || "your_jwt_secret_key_here",
-      { expiresIn: "24h" }
+      { expiresIn: "15m" }
     );
 
     console.log("User logged in successfully:", { email });

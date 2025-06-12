@@ -10,19 +10,20 @@ export default function Dashboard() {
 
   const totalIncome: number = transactions
     .filter((t: Transaction) => t.type === "income")
-    .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+    .reduce((sum: number, t: Transaction) => sum + (Number(t.amount) || 0), 0);
 
   const totalExpenses: number = transactions
     .filter((t: Transaction) => t.type === "expense")
-    .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+    .reduce((sum: number, t: Transaction) => sum + (Number(t.amount) || 0), 0);
 
   const totalSavings: number = transactions
     .filter((t: Transaction) => t.type === "savings")
-    .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+    .reduce((sum: number, t: Transaction) => sum + (Number(t.amount) || 0), 0);
 
   const balance: number = totalIncome - totalExpenses;
 
   const formatCurrency = (amount: number): string => {
+    if (isNaN(amount)) return "$0.00";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",

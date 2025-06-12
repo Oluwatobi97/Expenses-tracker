@@ -6,6 +6,8 @@ import {
   AuthContextType,
 } from "../types/auth.js";
 
+const API_URL = "http://localhost:3000/api";
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -23,8 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      // Use a relative path for API calls
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,7 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (!response.ok) {
-        // Attempt to read error message from backend response
         const errorData = await response
           .json()
           .catch(() => ({ message: response.statusText }));
@@ -41,7 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       const data = await response.json();
-      // Store the user data from the response
       const userData = {
         id: data.user.id,
         name: data.user.name,
@@ -59,29 +58,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const register = async (credentials: RegisterCredentials) => {
     try {
-      // Transform the data to match backend expectations
-      const registerData = {
-        username: credentials.name,
-        email: credentials.email,
-        password: credentials.password,
-      };
-
-      // Use a relative path for API calls
-      const response = await fetch("/api/auth/register", {
+      console.log("Attempting registration with:", credentials);
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(registerData),
+        body: JSON.stringify({
+          username: credentials.name,
+          email: credentials.email,
+          password: credentials.password,
+        }),
       });
 
       const data = await response.json();
+      console.log("Registration response:", data);
 
       if (!response.ok) {
         throw new Error(data.message || response.statusText);
       }
 
-      // Store the user data from the response
       const userData = {
         id: data.user.id,
         name: data.user.name,

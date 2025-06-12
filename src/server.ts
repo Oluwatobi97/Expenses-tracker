@@ -252,12 +252,20 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
 // Register endpoint
 app.post("/api/auth/register", async (req: Request, res: Response) => {
   const { username: name, email, password } = req.body;
-  console.log("Registration attempt for:", { name, email });
+  console.log("Registration attempt received:", {
+    name,
+    email,
+    passwordLength: password?.length,
+  });
 
   try {
     // Validate input
     if (!name || !email || !password) {
-      console.log("Missing required fields:", { name, email, password });
+      console.log("Missing required fields:", {
+        name,
+        email,
+        hasPassword: !!password,
+      });
       return res.status(400).json({
         message: "Missing required fields",
         required: ["username", "email", "password"],
@@ -265,6 +273,7 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
     }
 
     // Check if user already exists
+    console.log("Checking if user exists...");
     const userResult = await pool.query(
       "SELECT * FROM users WHERE name = $1 OR email = $2",
       [name, email]
@@ -279,9 +288,11 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
     }
 
     // Hash password
+    console.log("Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
+    console.log("Creating new user...");
     const result = await pool.query(
       "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
       [name, email, hashedPassword]
@@ -298,6 +309,7 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
       code: error.code,
       detail: error.detail,
       stack: error.stack,
+      query: error.query,
     });
     res.status(500).json({
       message: "Registration failed",

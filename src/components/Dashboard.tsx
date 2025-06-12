@@ -1,141 +1,88 @@
-import React, { useState } from "react";
-import { useTransactions } from "../context/TransactionContext";
-import { getMonthlyTransactions } from "../utils/transactions";
-import MonthlySummary from "./MonthlySummary";
-import TransactionForm from "./TransactionForm";
-import TransactionList from "./TransactionList";
-import { ArrowUpRight, ArrowDownRight, PiggyBank } from "lucide-react";
+import { useState } from "react";
+import { useTransactions } from "../context/TransactionContext.js";
+//import { getMonthlyTransactions } from "../utils/transactions";
+import TransactionForm from "./TransactionForm.js";
+import TransactionList from "./TransactionList.js";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
-const Dashboard: React.FC = () => {
+export const Dashboard = () => {
   const { transactions, loading, error } = useTransactions();
-  const [selectedMonth, setSelectedMonth] = useState(
-    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
       2,
       "0"
-    )}`
-  );
-  const [isFormOpen, setIsFormOpen] = useState(false);
+    )}`;
+  });
 
-  const monthlyData = getMonthlyTransactions(transactions, selectedMonth);
+  const handlePreviousMonth = () => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const date = new Date(year, month - 2); // -1 for zero-based, -1 more for previous
+    setSelectedMonth(
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+    );
+  };
 
-  const totalIncome = monthlyData.income || 0;
-  const totalExpenses = monthlyData.expenses || 0;
-  const totalSavings = monthlyData.savings || 0;
-  const balance = totalIncome - totalExpenses;
-
-  const formatCurrency = (amount: number) => {
-    if (isNaN(amount)) return "$0.00";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+  const handleNextMonth = () => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const date = new Date(year, month); // next month
+    setSelectedMonth(
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-        role="alert"
-      >
-        <strong className="font-bold">Error!</strong>
-        <span className="block sm:inline"> {error}</span>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Income
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(totalIncome)}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-              <ArrowUpRight className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Expenses
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(totalExpenses)}
-              </p>
-            </div>
-            <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
-              <ArrowDownRight className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Savings
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(totalSavings)}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-              <PiggyBank className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Balance
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(balance)}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
-              <PiggyBank className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <TransactionList />
-        </div>
-        <div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+        <div className="flex items-center space-x-4">
           <button
-            onClick={() => setIsFormOpen(true)}
-            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            onClick={handlePreviousMonth}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
-            Add Transaction
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <span className="text-lg font-semibold text-gray-700">
+            {new Date(selectedMonth + "-01").toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+          <button
+            onClick={handleNextMonth}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <ArrowRight className="w-6 h-6 text-gray-600" />
           </button>
         </div>
       </div>
 
-      {isFormOpen && <TransactionForm onClose={() => setIsFormOpen(false)} />}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Add Transaction</h2>
+          <TransactionForm onClose={() => {}} />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
+          <TransactionList />
+        </div>
+      </div>
     </div>
   );
 };
-
-export default Dashboard;

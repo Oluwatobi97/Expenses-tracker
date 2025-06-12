@@ -19,7 +19,7 @@ const pool = new Pool({
       : false,
 });
 
-async function runMigrations() {
+export async function runMigrations() {
   const client = await pool.connect();
   try {
     // Start transaction
@@ -49,13 +49,15 @@ async function runMigrations() {
   }
 }
 
-// Run migrations
-runMigrations()
-  .then(() => {
-    console.log("All migrations completed");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Migration failed:", error);
-    process.exit(1);
-  });
+// Only run migrations directly if this file is executed directly
+if (require.main === module) {
+  runMigrations()
+    .then(() => {
+      console.log("All migrations completed");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("Migration failed:", error);
+      process.exit(1);
+    });
+}

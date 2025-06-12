@@ -9,6 +9,7 @@ import { SERVER_CONFIG } from "./config/server.config.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { runMigrations } from "./db/migrate.js";
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -90,6 +91,12 @@ async function startServer() {
   try {
     console.log("Starting server initialization...");
     console.log("Environment:", process.env.NODE_ENV);
+
+    // Run migrations in production
+    if (process.env.NODE_ENV === "production") {
+      console.log("Running database migrations...");
+      await runMigrations();
+    }
 
     // Test database connection
     await testDbConnection();

@@ -40,7 +40,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error(errorData.message || "Invalid credentials");
       }
 
-      const userData = await response.json();
+      const data = await response.json();
+      // Store the user data from the response
+      const userData = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        token: data.token,
+      };
+
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {

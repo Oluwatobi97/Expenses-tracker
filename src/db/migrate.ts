@@ -50,7 +50,7 @@ export async function runMigrations() {
 }
 
 // Only run migrations directly if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   runMigrations()
     .then(() => {
       console.log("All migrations completed");

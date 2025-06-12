@@ -95,7 +95,13 @@ async function startServer() {
     // Run migrations in production
     if (process.env.NODE_ENV === "production") {
       console.log("Running database migrations...");
-      await runMigrations();
+      try {
+        await runMigrations();
+        console.log("Database migrations completed successfully");
+      } catch (error) {
+        console.error("Database migration failed:", error);
+        // Continue server startup even if migration fails
+      }
     }
 
     // Test database connection

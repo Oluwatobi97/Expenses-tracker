@@ -18,9 +18,14 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 // Debug: Log environment variables (excluding sensitive data)
-console.log("Environment check:", {
+console.log("Environment variables:", {
   NODE_ENV: process.env.NODE_ENV,
+  DB_HOST: process.env.DB_HOST,
+  DB_NAME: process.env.DB_NAME,
+  DB_USER: process.env.DB_USER,
+  DB_PORT: process.env.DB_PORT,
   DB_PASSWORD_SET: !!process.env.DB_PASSWORD,
+  DATABASE_URL_SET: !!process.env.DATABASE_URL,
   PORT: process.env.PORT,
   JWT_SECRET_SET: !!process.env.JWT_SECRET,
 });
@@ -30,13 +35,24 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("=== Unhandled Rejection Details ===");
   console.error("Promise:", promise);
   console.error("Reason type:", typeof reason);
-  console.error("Reason:", reason);
+
   if (reason instanceof Error) {
     console.error("Error name:", reason.name);
     console.error("Error message:", reason.message);
     console.error("Error stack:", reason.stack);
-  } else if (typeof reason === "object") {
-    console.error("Reason object:", JSON.stringify(reason, null, 2));
+  } else if (typeof reason === "object" && reason !== null) {
+    try {
+      console.error("Reason object:", JSON.stringify(reason, null, 2));
+    } catch (e) {
+      console.error("Reason object (raw):", reason);
+    }
+    // Type assertion for stack property
+    const reasonWithStack = reason as { stack?: string };
+    if (reasonWithStack.stack) {
+      console.error("Stack:", reasonWithStack.stack);
+    }
+  } else {
+    console.error("Reason:", reason);
   }
   console.error("=================================");
 });
@@ -332,4 +348,25 @@ app.get("*", (_req: Request, res: Response) => {
     console.error("index.html not found!");
     res.status(404).send("index.html not found");
   }
+});
+
+const dbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+};
+
+// Log environment and db config before starting the server
+console.log("ENV:", process.env);
+console.log("DB CONFIG:", dbConfig);
+
+// Log database configuration (excluding sensitive data)
+console.log("Database configuration:", {
+  ...dbConfig,
+  password: "****",
+  connectionString: dbConfig.connectionString ? "****" : undefined,
 });

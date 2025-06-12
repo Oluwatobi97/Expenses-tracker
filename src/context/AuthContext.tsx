@@ -14,13 +14,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check for stored user data on mount
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Check if token is expired
+        if (parsedUser.token) {
+          const tokenData = JSON.parse(atob(parsedUser.token.split(".")[1]));
+          if (tokenData.exp * 1000 > Date.now()) {
+            setUser(parsedUser);
+          } else {
+            localStorage.removeItem("user");
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem("user");
+      }
     }
+    setLoading(false);
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
@@ -82,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         id: data.user.id,
         name: data.user.name,
         email: data.user.email,
+        token: data.token,
       };
 
       setUser(userData);
@@ -98,7 +115,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

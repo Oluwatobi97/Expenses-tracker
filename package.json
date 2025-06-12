@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "tsc && npx vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "build:all": "node -e \"try { require('fs').rmSync('dist', { recursive: true, force: true }); } catch(e) {}\" && npm run build && npm run build:server",
-    "start": "node dist/server/server.js",
+    "build:all": "node -e \"try { require('fs').rmSync('dist', { recursive: true, force: true }); } catch(e) {}\" && npm run build && npm run build:server && cp -r dist/server/* dist/",
+    "start": "node dist/server.js",
     "start:dev": "cross-env NODE_OPTIONS=\"--loader ts-node/esm\" ts-node --esm src/server.ts",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"

@@ -6,7 +6,7 @@ import TransactionList from "./TransactionList.js";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export const Dashboard = () => {
-  const { transactions, loading, error } = useTransactions();
+  const { loading, error } = useTransactions();
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(

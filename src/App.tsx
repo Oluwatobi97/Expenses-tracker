@@ -13,7 +13,7 @@ import Navbar from "./components/Navbar.js";
 import Layout from "./components/Layout.js";
 import Login from "./components/Login.js";
 import Register from "./components/Register.js";
-import Dashboard from "./components/Dashboard.js";
+import { Dashboard } from "./components/Dashboard";
 import Transactions from "./components/Transactions.js";
 import Analytics from "./components/Analytics.js";
 import Settings from "./components/Settings.js";

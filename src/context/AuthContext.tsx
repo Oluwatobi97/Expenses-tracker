@@ -75,15 +75,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         body: JSON.stringify(registerData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        // Attempt to read error message from backend response
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || response.statusText);
+        throw new Error(data.message || response.statusText);
       }
 
-      const userData = await response.json();
+      // Store the user data from the response
+      const userData = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+      };
+
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {

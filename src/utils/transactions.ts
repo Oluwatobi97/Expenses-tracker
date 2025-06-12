@@ -1,13 +1,4 @@
-export interface Transaction {
-  id: string;
-  date: string; // ISO string
-  type: "income" | "expense" | "savings";
-  amount: number;
-  description: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Transaction } from "../types";
 
 export function getMonthlyTransactions(
   transactions: Transaction[],
@@ -23,15 +14,22 @@ export function getMonthlyTransactions(
       txDate.getMonth() + 1
     ).padStart(2, "0")}`;
     if (txMonth === month) {
+      const amount = Number(tx.amount);
+      if (isNaN(amount)) return; // Skip invalid amounts
+
       if (tx.type === "income") {
-        income += tx.amount;
+        income += amount;
       } else if (tx.type === "expense") {
-        expenses += tx.amount;
+        expenses += amount;
       } else if (tx.type === "savings") {
-        savings += tx.amount;
+        savings += amount;
       }
     }
   });
 
-  return { income, expenses, savings };
+  return {
+    income: isNaN(income) ? 0 : income,
+    expenses: isNaN(expenses) ? 0 : expenses,
+    savings: isNaN(savings) ? 0 : savings,
+  };
 }

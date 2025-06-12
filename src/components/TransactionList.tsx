@@ -5,7 +5,7 @@ import TransactionForm from "./TransactionForm.js";
 import { format } from "date-fns";
 
 export default function TransactionList() {
-  const { transactions } = useTransactions();
+  const { transactions, loading, error } = useTransactions();
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
 
@@ -14,18 +14,42 @@ export default function TransactionList() {
   };
 
   // Local currency formatter
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
+  const formatCurrency = (amount: number) => {
+    if (isNaN(amount)) return "$0.00";
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+        role="alert"
+      >
+        <strong className="font-bold">Error!</strong>
+        <span className="block sm:inline"> {error}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {editingTransaction && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-lg font-medium mb-4">Edit Transaction</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">
+              Edit Transaction
+            </h2>
             <TransactionForm
               transaction={editingTransaction}
               onClose={() => setEditingTransaction(null)}
@@ -34,16 +58,16 @@ export default function TransactionList() {
         </div>
       )}
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {transactions.map((transaction) => (
             <li key={transaction.id} className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                     {transaction.description}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {format(new Date(transaction.date), "MMM d, yyyy")}
                   </p>
                 </div>
@@ -51,16 +75,18 @@ export default function TransactionList() {
                   <span
                     className={`text-sm font-medium ${
                       transaction.type === "income"
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-green-600 dark:text-green-400"
+                        : transaction.type === "savings"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-red-600 dark:text-red-400"
                     }`}
                   >
-                    {transaction.type === "income" ? "+" : "-"}
+                    {transaction.type === "expense" ? "-" : "+"}
                     {formatCurrency(Math.abs(transaction.amount))}
                   </span>
                   <button
                     onClick={() => handleEdit(transaction)}
-                    className="text-indigo-600 hover:text-indigo-900"
+                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                   >
                     Edit
                   </button>

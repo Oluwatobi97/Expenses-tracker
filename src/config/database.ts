@@ -18,31 +18,44 @@ console.log("Environment variables check:", {
   DB_USER: process.env.DB_USER,
   DB_PORT: process.env.DB_PORT,
   DB_PASSWORD_SET: !!process.env.DB_PASSWORD,
+  DATABASE_URL_SET: !!process.env.DATABASE_URL,
   SSL_ENABLED: process.env.NODE_ENV === "production",
 });
 
-// Database configuration using environment variables
-const dbConfig = {
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "expense_tracker",
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "5432"),
-  // Add SSL configuration for production
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? {
-          rejectUnauthorized: false, // Required for some cloud providers
-        }
-      : undefined,
-  // Add connection timeout
-  connectionTimeoutMillis: 10000, // 10 seconds
-  // Add idle timeout
-  idleTimeoutMillis: 30000, // 30 seconds
-};
+// Parse connection string if available
+let dbConfig;
+if (process.env.DATABASE_URL) {
+  console.log("Using DATABASE_URL for connection");
+  dbConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl:
+      process.env.NODE_ENV === "production"
+        ? { rejectUnauthorized: false }
+        : undefined,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+  };
+} else {
+  console.log("Using individual database configuration");
+  dbConfig = {
+    user: process.env.DB_USER || "postgres",
+    host: process.env.DB_HOST || "localhost",
+    database: process.env.DB_NAME || "expense_tracker",
+    password: process.env.DB_PASSWORD,
+    port: parseInt(process.env.DB_PORT || "5432"),
+    ssl:
+      process.env.NODE_ENV === "production"
+        ? { rejectUnauthorized: false }
+        : undefined,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+  };
+}
 
 // Verify required environment variables
-const requiredEnvVars = ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD"];
+const requiredEnvVars = process.env.DATABASE_URL
+  ? ["DATABASE_URL"]
+  : ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD"];
 const missingEnvVars = requiredEnvVars.filter(
   (varName) => !process.env[varName]
 );
@@ -56,7 +69,8 @@ if (missingEnvVars.length > 0) {
 
 console.log("Database configuration:", {
   ...dbConfig,
-  password: "****", // Mask the password in logs
+  password: "****",
+  connectionString: dbConfig.connectionString ? "****" : undefined,
   ssl: dbConfig.ssl ? "enabled" : "disabled",
 });
 
@@ -82,9 +96,15 @@ const retryConnection = async (maxRetries = 5, delay = 5000) => {
       console.error(`Database connection attempt ${retries} failed:`, {
         error: err.message,
         code: err.code,
-        host: dbConfig.host,
-        database: dbConfig.database,
-        user: dbConfig.user,
+        host:
+          dbConfig.host ||
+          (dbConfig.connectionString ? "from connection string" : "undefined"),
+        database:
+          dbConfig.database ||
+          (dbConfig.connectionString ? "from connection string" : "undefined"),
+        user:
+          dbConfig.user ||
+          (dbConfig.connectionString ? "from connection string" : "undefined"),
       });
 
       if (retries === maxRetries) {
@@ -108,6 +128,7 @@ export const testConnection = async () => {
     console.log("Connection details:", {
       ...dbConfig,
       password: "****",
+      connectionString: dbConfig.connectionString ? "****" : undefined,
       ssl: dbConfig.ssl ? "enabled" : "disabled",
     });
 
@@ -143,12 +164,23 @@ export const testConnection = async () => {
       const tempClient = await tempPool.connect();
       const dbCheck = await tempClient.query(
         "SELECT 1 FROM pg_database WHERE datname = $1",
-        [dbConfig.database]
+        [
+          dbConfig.database ||
+            (dbConfig.connectionString
+              ? "from connection string"
+              : "undefined"),
+        ]
       );
       if (dbCheck.rows.length === 0) {
-        console.error(`Database '${dbConfig.database}' does not exist!`);
+        console.error(
+          `Database '${
+            dbConfig.database || "from connection string"
+          }' does not exist!`
+        );
       } else {
-        console.log(`Database '${dbConfig.database}' exists.`);
+        console.log(
+          `Database '${dbConfig.database || "from connection string"}' exists.`
+        );
       }
       tempClient.release();
       await tempPool.end();

@@ -12,7 +12,8 @@
     "start:dev": "cross-env NODE_ENV=development NODE_OPTIONS=\"--loader ts-node/esm\" ts-node --esm src/server.ts",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "init-db": "tsx src/config/init-db.ts"
+    "init-db": "tsx src/config/init-db.ts",
+    "migrate": "cross-env NODE_ENV=development NODE_OPTIONS=\"--loader ts-node/esm\" ts-node --esm src/db/migrate.ts"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",

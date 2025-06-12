@@ -72,9 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const errorData = await response
           .json()
           .catch(() => ({ message: response.statusText }));
-        throw new Error(
-          "Registration failed: " + (errorData.message || response.statusText)
-        );
+        throw new Error(errorData.message || response.statusText);
       }
 
       const userData = await response.json();
@@ -82,10 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Registration error:", error);
-      throw new Error(
-        "Registration failed: " +
-          (error instanceof Error ? error.message : String(error))
-      );
+      throw error instanceof Error ? error : new Error(String(error));
     }
   };
 

@@ -23,28 +23,29 @@ console.log("Environment variables check:", {
 });
 
 // Parse connection string if available
-let dbConfig;
-if (process.env.DATABASE_URL) {
-  console.log("Using DATABASE_URL for connection");
-  dbConfig = {
-    connectionString: process.env.DATABASE_URL,
-    ssl: false, // Disable SSL for local development
-    connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000,
-  };
-} else {
-  console.log("Using individual database configuration");
-  dbConfig = {
-    user: process.env.DB_USER || "postgres",
-    host: process.env.DB_HOST || "localhost",
-    database: process.env.DB_NAME || "expense_tracker",
-    password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT || "5432"),
-    ssl: false, // Disable SSL for local development
-    connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000,
-  };
-}
+const dbConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? { rejectUnauthorized: false }
+          : false,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+    }
+  : {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD,
+      port: parseInt(process.env.DB_PORT || "5432"),
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? { rejectUnauthorized: false }
+          : false,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+    };
 
 // Verify required environment variables
 const requiredEnvVars = process.env.DATABASE_URL

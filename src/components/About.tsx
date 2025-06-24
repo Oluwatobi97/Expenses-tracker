@@ -1,12 +1,16 @@
 export default function About() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 mt-10 py-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">About Expense Tracker</h1>
+        <h1 className="text-3xl font-bold  text-black dark:text-blue-600 mb-8">
+          About Expense Tracker
+        </h1>
 
         <div className="space-y-6">
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
+            <h2 className="text-2xl font-semibold text-black dark:text-blue-600 mb-4">
+              Our Mission
+            </h2>
             <p className="text-gray-600 dark:text-gray-300">
               Expense Tracker is designed to help you take control of your
               finances by providing a simple, intuitive way to track your
@@ -16,7 +20,9 @@ export default function About() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Features</h2>
+            <h2 className="text-2xl font-semibold  text-black dark:text-blue-600 mb-4">
+              Features
+            </h2>
             <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
               <li>Track income, expenses, and savings</li>
               <li>Monthly summaries and analytics</li>
@@ -28,7 +34,9 @@ export default function About() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Contact</h2>
+            <h2 className="text-2xl font-semibold  text-black dark:text-blue-600 mb-4">
+              Contact
+            </h2>
             <p className="text-gray-600 dark:text-gray-300">
               Have questions or suggestions? We'd love to hear from you! Reach
               out to us at:
@@ -43,7 +51,9 @@ export default function About() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Version</h2>
+            <h2 className="text-2xl font-semibold  text-black dark:text-blue-600 mb-4">
+              Version
+            </h2>
             <p className="text-gray-600 dark:text-gray-300">
               Current Version: 1.0.0
             </p>

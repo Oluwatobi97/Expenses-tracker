@@ -19,14 +19,14 @@ console.log("Environment variables check:", {
   DB_PORT: process.env.DB_PORT,
   DB_PASSWORD_SET: !!process.env.DB_PASSWORD,
   DATABASE_URL_SET: !!process.env.DATABASE_URL,
-  SSL_ENABLED: true, // Always enable SSL for remote database
+  SSL_ENABLED: process.env.NODE_ENV === "production",
 });
 
 // Parse connection string if available
 const dbConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }, // Enable SSL for remote database
+      ssl: { rejectUnauthorized: false },
       connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
     }
@@ -36,7 +36,7 @@ const dbConfig = process.env.DATABASE_URL
       database: process.env.DB_NAME,
       password: process.env.DB_PASSWORD,
       port: parseInt(process.env.DB_PORT || "5432"),
-      ssl: { rejectUnauthorized: false }, // Enable SSL for remote database
+      ssl: { rejectUnauthorized: false },
       connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
     };

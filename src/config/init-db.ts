@@ -16,7 +16,7 @@ console.log("DATABASE_URL:", process.env.DATABASE_URL);
 // Database configuration
 const dbConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: false, // Disable SSL for local development
+  ssl: { rejectUnauthorized: false },
 };
 
 async function initializeDatabase() {

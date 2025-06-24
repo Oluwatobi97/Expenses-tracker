@@ -24,7 +24,7 @@ export default function Login() {
 
     try {
       await login(formData);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Invalid email or password"

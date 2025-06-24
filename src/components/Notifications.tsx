@@ -1,7 +1,7 @@
 import React from "react";
-import { useTransactions } from "../context/TransactionContext";
+import { useTransactions } from "../context/TransactionContext.js";
 import { getMonthlyTransactions } from "../utils/transactions";
-import { Bell, AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 
 interface Notification {
   type: "warning" | "info";
@@ -11,10 +11,6 @@ interface Notification {
 
 const Notifications: React.FC = () => {
   const { transactions } = useTransactions();
-  const currentMonth = new Date().toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
 
   const monthlyData = getMonthlyTransactions(
     transactions,
@@ -54,35 +50,104 @@ const Notifications: React.FC = () => {
     });
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <Bell className="h-6 w-6 text-gray-900 dark:text-white" />
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Notifications
-        </h2>
-      </div>
+  // Calculate daily expenses
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dailyExpenses = transactions
+    .filter(
+      (t) =>
+        t.type === "expense" && new Date(t.date).getTime() >= today.getTime()
+    )
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      <div className="space-y-4">
-        {notifications.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-            <p className="text-gray-600 dark:text-gray-400">
-              No notifications for {currentMonth}
+  // Calculate weekly expenses
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  const weeklyExpenses = transactions
+    .filter(
+      (t) =>
+        t.type === "expense" &&
+        new Date(t.date).getTime() >= weekStart.getTime()
+    )
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  // Calculate monthly expenses
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthlyExpenses = transactions
+    .filter(
+      (t) =>
+        t.type === "expense" &&
+        new Date(t.date).getTime() >= monthStart.getTime()
+    )
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  // Define thresholds
+  const DAILY_THRESHOLD = 100;
+  const WEEKLY_THRESHOLD = 500;
+  const MONTHLY_THRESHOLD = 2000;
+
+  return (
+    <div className="container mx-auto px-4 py-8 mt-16">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+        Expense Alerts
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div
+          className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 ${
+            dailyExpenses > DAILY_THRESHOLD ? "border-l-4 border-red-500" : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            Daily Expenses
+          </h3>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            ${dailyExpenses.toFixed(2)}
+          </p>
+          {dailyExpenses > DAILY_THRESHOLD && (
+            <p className="text-red-600 mt-2">
+              ⚠️ Daily expenses exceed ${DAILY_THRESHOLD}
             </p>
-          </div>
-        ) : (
-          notifications.map((notification, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-start space-x-4"
-            >
-              {notification.icon}
-              <p className="text-gray-900 dark:text-white">
-                {notification.message}
-              </p>
-            </div>
-          ))
-        )}
+          )}
+        </div>
+
+        <div
+          className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 ${
+            weeklyExpenses > WEEKLY_THRESHOLD ? "border-l-4 border-red-500" : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            Weekly Expenses
+          </h3>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            ${weeklyExpenses.toFixed(2)}
+          </p>
+          {weeklyExpenses > WEEKLY_THRESHOLD && (
+            <p className="text-red-600 mt-2">
+              ⚠️ Weekly expenses exceed ${WEEKLY_THRESHOLD}
+            </p>
+          )}
+        </div>
+
+        <div
+          className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 ${
+            monthlyExpenses > MONTHLY_THRESHOLD
+              ? "border-l-4 border-red-500"
+              : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            Monthly Expenses
+          </h3>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            ${monthlyExpenses.toFixed(2)}
+          </p>
+          {monthlyExpenses > MONTHLY_THRESHOLD && (
+            <p className="text-red-600 mt-2">
+              ⚠️ Monthly expenses exceed ${MONTHLY_THRESHOLD}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

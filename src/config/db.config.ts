@@ -25,12 +25,9 @@ console.log("Environment variables:", {
 
 // Database configuration
 const dbConfig = {
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "5432"),
-  ssl: false, // Disable SSL for local development
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.SSL_ENABLED === "true" ? { rejectUnauthorized: false } : false,
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
 };

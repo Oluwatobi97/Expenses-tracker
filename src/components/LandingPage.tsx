@@ -53,7 +53,7 @@ const LandingPage: React.FC = () => {
                   <img
                     src="/dashboard_screenshot.png.png"
                     alt="Dashboard Preview"
-                    className="rounded-lg shadow-2xl w-full h-auto object-contain"
+                    className=" w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl h-auto object-contain"
                   />
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-indigo-600 rounded-lg transform rotate-3"></div>

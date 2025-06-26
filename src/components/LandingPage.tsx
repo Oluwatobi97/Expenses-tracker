@@ -6,54 +6,54 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-wrap items-center">
-            <div className="w-full lg:w-1/2">
+      <section className="relative pt-20 pb-16 sm:pb-32 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex flex-wrap flex-col-reverse lg:flex-row items-center gap-10 lg:gap-0">
+            <div className="w-full lg:w-1/2 mt-10 lg:mt-0">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                <h1 className="text-3xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center lg:text-left">
                   Take Control of Your
                   <span className="text-indigo-600 dark:text-indigo-400">
                     {" "}
                     Finances
                   </span>
                 </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 text-center lg:text-left">
                   Track your expenses, manage your budget, and achieve your
                   financial goals with our powerful expense tracking app.
                 </p>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center lg:justify-start">
                   <Link
                     to="/register"
-                    className="px-8 py-3 text-lg font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+                    className="px-6 py-3 sm:px-8 sm:py-3 text-base sm:text-lg font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors text-center"
                   >
                     Get Started
                   </Link>
                   <Link
                     to="/about"
-                    className="px-8 py-3 text-lg font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                    className="px-6 py-3 sm:px-8 sm:py-3 text-base sm:text-lg font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors text-center"
                   >
                     Learn More
                   </Link>
                 </div>
               </motion.div>
             </div>
-            <div className="w-full lg:w-1/2 mt-12 lg:mt-0">
+            <div className="w-full flex justify-center lg:justify-end lg:w-1/2 mt-8 lg:mt-0">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="relative"
+                className="relative w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl"
               >
                 <div className="relative z-10">
                   <img
                     src="/dashboard_screenshot.png.png"
                     alt="Dashboard Preview"
-                    className="rounded-lg shadow-2xl"
+                    className="rounded-lg shadow-2xl w-full h-auto object-contain"
                   />
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-indigo-600 rounded-lg transform rotate-3"></div>
@@ -64,23 +64,23 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white dark:bg-gray-800">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20 bg-white dark:bg-gray-800">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
               Powerful Features
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
               Everything you need to manage your finances effectively
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -175,23 +175,23 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-indigo-600 dark:bg-indigo-900">
-        <div className="container mx-auto px-6 text-center">
+      <section className="py-12 sm:py-20 bg-indigo-600 dark:bg-indigo-900">
+        <div className="container mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-4">
               Ready to Take Control of Your Finances?
             </h2>
-            <p className="text-lg text-indigo-100 mb-8">
+            <p className="text-base sm:text-lg text-indigo-100 mb-6 sm:mb-8">
               Join thousands of users who are already managing their expenses
               effectively
             </p>
             <Link
               to="/register"
-              className="px-8 py-3 text-lg font-medium text-indigo-600 bg-white rounded-lg hover:bg-indigo-50 transition-colors"
+              className="px-6 py-3 sm:px-8 sm:py-3 text-base sm:text-lg font-medium text-indigo-600 bg-white rounded-lg hover:bg-indigo-50 transition-colors"
             >
               Start Free Trial
             </Link>

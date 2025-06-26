@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import {
   User,
   LoginCredentials,
@@ -8,11 +8,14 @@ import {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTO_LOGOUT_TIME = 15 * 60 * 1000; // 15 minutes in ms
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const logoutTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Check for stored user data on mount
@@ -22,6 +25,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     setLoading(false);
   }, []);
+
+  // Helper to clear timer
+  const clearLogoutTimer = () => {
+    if (logoutTimer.current) {
+      clearTimeout(logoutTimer.current);
+      logoutTimer.current = null;
+    }
+  };
+
+  // Set auto-logout timer
+  const setAutoLogout = () => {
+    clearLogoutTimer();
+    logoutTimer.current = setTimeout(() => {
+      logout();
+      window.location.href = "/login";
+    }, AUTO_LOGOUT_TIME);
+  };
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -55,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
+      setAutoLogout();
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -107,9 +128,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    clearLogoutTimer();
     setUser(null);
     localStorage.removeItem("user");
   };
+
+  // Optionally, reset timer on user activity
+  useEffect(() => {
+    if (user) {
+      setAutoLogout();
+      const resetTimer = () => setAutoLogout();
+      window.addEventListener("mousemove", resetTimer);
+      window.addEventListener("keydown", resetTimer);
+      return () => {
+        window.removeEventListener("mousemove", resetTimer);
+        window.removeEventListener("keydown", resetTimer);
+        clearLogoutTimer();
+      };
+    }
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, loading }}>

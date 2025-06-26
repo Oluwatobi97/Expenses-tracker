@@ -58,15 +58,20 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 items-center">
           {/* Logo and Desktop Navigation */}
-          <div className="flex">
+          <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Link
                 to={user ? "/dashboard" : "/"}
-                className="text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                className="flex items-center gap-2 text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
               >
-                Expense Tracker
+                <img
+                  src="/logo.svg"
+                  alt="Expense Tracker Logo"
+                  className="h-8 w-8 mr-1"
+                />
+                <span className="hidden sm:inline">Expense Tracker</span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -117,20 +122,21 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="sm:hidden p-3 rounded-md text-2xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {isMobileMenuOpen ? "✕" : "☰"}
-            </button>
+            {/* Mobile menu button: only show if user is logged in */}
+            {user && (
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="sm:hidden p-3 rounded-md text-2xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              >
+                {isMobileMenuOpen ? "✕" : "☰"}
+              </button>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
+      {/* Mobile menu: only show if user is logged in */}
+      {user && isMobileMenuOpen && (
         <div className="sm:hidden bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700">
           <div className="px-4 pt-4 pb-6 space-y-3">
             {navItems.map((item) => (
@@ -147,31 +153,12 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            {user ? (
-              <button
-                onClick={handleLogout}
-                className="w-full px-4 py-3 text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
-              >
-                Logout
-              </button>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <Link
-                  to="/login"
-                  className="w-full px-4 py-3 text-lg font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 text-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="w-full px-4 py-3 text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors text-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+            <button
+              onClick={handleLogout}
+              className="w-full px-4 py-3 text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
       )}

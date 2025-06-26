@@ -1,0 +1,7 @@
+<svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="8" width="28" height="24" rx="6" fill="#6366F1"/>
+  <rect x="8" y="14" width="16" height="12" rx="3" fill="#fff"/>
+  <rect x="8" y="14" width="16" height="4" rx="2" fill="#A5B4FC"/>
+  <circle cx="24" cy="26" r="2" fill="#6366F1"/>
+  <text x="38" y="28" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="bold" fill="#1E293B">Expense <tspan fill="#6366F1">Tracker</tspan></text>
+</svg> 

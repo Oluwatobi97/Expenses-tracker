@@ -51,9 +51,9 @@ const LandingPage: React.FC = () => {
               >
                 <div className="relative z-10">
                   <img
-                    src="/dashboard_screenshot.png.png"
-                    alt="Dashboard Preview"
-                    className=" w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl h-auto object-contain"
+                    src="/logo.svg"
+                    alt="Expense Tracker Logo"
+                    className="h-8 w-8 mr-1"
                   />
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-indigo-600 rounded-lg transform rotate-3"></div>

@@ -69,7 +69,7 @@ export default function Navbar() {
                 <img
                   src="/logo.svg"
                   alt="Expense Tracker Logo"
-                  className="h-8 w-8 mr-1"
+                  className="h-12 w-12 mr-2"
                 />
                 <span className="hidden sm:inline">Expense Tracker</span>
               </Link>
@@ -122,7 +122,7 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-            {/* Mobile menu button: only show if user is logged in */}
+            {/* Hamburger menu only for logged-in users */}
             {user && (
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

@@ -21,7 +21,9 @@ export function Transactions() {
 
   return (
     <div className="container mx-auto px-4 py-8 mt-16">
-      <h1 className="text-2xl font-bold">Transactions</h1>
+      <h1 className="text-2xl text-black dark:text-white mb-5 font-bold">
+        Transactions
+      </h1>
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
           <button

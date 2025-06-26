@@ -127,7 +127,9 @@ export const Dashboard = () => {
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            <h1 className="text-2xl font-bold">Welcome, {user?.name}</h1>
+            <h1 className="text-sm md:text-2xl lg:text-2xl text-black dark:text-white font-bold">
+              Welcome, {user?.name}
+            </h1>
           </div>
           <div className="flex items-center gap-4">
             <button

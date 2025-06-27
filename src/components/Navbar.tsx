@@ -26,6 +26,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [user, location.pathname]);
+
   const isActive = (path: string) => location.pathname === path;
 
   const authenticatedNavItems = [

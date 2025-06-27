@@ -44,11 +44,6 @@ export default function Navbar() {
 
   const isLandingPage = location.pathname === "/";
 
-  // Only show navbar on mobile if not on landing page or if user is authenticated
-  if (!user && isLandingPage && window.innerWidth < 640) {
-    return null;
-  }
-
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${

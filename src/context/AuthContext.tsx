@@ -5,6 +5,7 @@ import {
   RegisterCredentials,
   AuthContextType,
 } from "../types/auth";
+import SubscriptionModal from "../components/SubscriptionModal";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -16,6 +17,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const logoutTimer = useRef<NodeJS.Timeout | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   useEffect(() => {
     // Check for stored user data on mount
@@ -148,9 +150,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user]);
 
+  // Show modal when user logs in
+  useEffect(() => {
+    if (user) {
+      setShowSubscriptionModal(true);
+    }
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </AuthContext.Provider>
   );
 };

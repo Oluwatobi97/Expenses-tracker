@@ -1,4 +1,5 @@
 // import { Transaction } from "../types/index.js";
+import { useTransactions } from "../context/TransactionContext.js";
 
 interface MonthlySummaryProps {
   totalIncome: number;
@@ -11,13 +12,14 @@ export const MonthlySummary = ({
   totalExpenses,
   totalSavings,
 }: MonthlySummaryProps) => {
+  const { currency } = useTransactions();
   const balance = totalIncome - totalExpenses;
   const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-NG", {
       style: "currency",
-      currency: "USD",
+      currency: currency,
     }).format(amount);
   };
 

@@ -5,7 +5,7 @@ import TransactionForm from "./TransactionForm.js";
 import { format } from "date-fns";
 
 export default function TransactionList() {
-  const { transactions, loading, error } = useTransactions();
+  const { transactions, loading, error, currency } = useTransactions();
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
 
@@ -16,9 +16,9 @@ export default function TransactionList() {
   // Local currency formatter
   const formatCurrency = (amount: number) => {
     if (isNaN(amount)) return "$0.00";
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-NG", {
       style: "currency",
-      currency: "USD",
+      currency: currency,
     }).format(amount);
   };
 

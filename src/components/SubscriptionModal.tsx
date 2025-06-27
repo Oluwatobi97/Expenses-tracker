@@ -36,42 +36,48 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-2xl w-full mx-4 p-6 relative animate-fadeIn">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full mx-2 p-4 sm:p-6 relative animate-fadeIn">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-indigo-600 text-2xl font-bold focus:outline-none"
+          className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-indigo-600 text-xl font-bold focus:outline-none"
           aria-label="Close"
         >
           ×
         </button>
-        <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">
           Choose Your Plan
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col items-center ${
+              className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center ${
                 plan.highlight
                   ? "border-2 border-indigo-600 dark:border-indigo-400"
                   : ""
               }`}
             >
-              <h3 className="text-xl font-semibold mb-2 text-indigo-600 dark:text-indigo-400">
+              <h3 className="text-lg font-semibold mb-1 text-indigo-600 dark:text-indigo-400">
                 {plan.name}
               </h3>
-              <p className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
                 {plan.price}
               </p>
-              <ul className="mb-6 text-gray-600 dark:text-gray-300 text-center">
+              <ul className="mb-3 text-gray-600 dark:text-gray-300 text-center text-sm">
                 <li>{plan.description}</li>
               </ul>
-              <span className="inline-block px-4 py-2 text-sm font-medium bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded">
+              <span className="inline-block px-3 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded">
                 {plan.badge}
               </span>
             </div>
           ))}
         </div>
+        <button
+          onClick={onClose}
+          className="mt-6 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import {
 } from "recharts";
 
 export default function TransactionSummary() {
-  const { transactions } = useTransactions();
+  const { transactions, currency } = useTransactions();
 
   // Calculate totals
   const totalIncome = transactions
@@ -32,9 +32,9 @@ export default function TransactionSummary() {
 
   // Local currency formatter
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat("en-NG", {
       style: "currency",
-      currency: "USD",
+      currency: currency,
     }).format(amount);
 
   return (

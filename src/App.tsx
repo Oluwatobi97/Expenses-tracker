@@ -13,6 +13,7 @@ import { Transactions } from "./components/Transactions";
 import Settings from "./components/Settings";
 import LandingPage from "./components/LandingPage";
 import About from "./components/About";
+import SubscriptionsPage from "./components/SubscriptionsPage";
 
 const Notifications = lazy(() => import("./components/Notifications"));
 
@@ -81,6 +82,7 @@ function AppContent() {
               </PrivateRoute>
             }
           />
+          <Route path="/subscriptions" element={<SubscriptionsPage />} />
         </Routes>
       </Suspense>
     </div>

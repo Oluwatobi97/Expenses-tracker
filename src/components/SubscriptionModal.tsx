@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const navigate = useNavigate();
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -73,8 +75,17 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           ))}
         </div>
         <button
+          onClick={() => {
+            onClose();
+            navigate("/subscriptions");
+          }}
+          className="mt-6 w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
+        >
+          View Plans
+        </button>
+        <button
           onClick={onClose}
-          className="mt-6 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          className="mt-3 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           Cancel
         </button>

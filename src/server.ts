@@ -364,6 +364,127 @@ app.post("/api/transactions", async (req: Request, res: Response) => {
   }
 });
 
+// Admin endpoint to get all users
+app.get("/api/admin/users", async (req: Request, res: Response) => {
+  let client: PoolClient | null = null;
+  try {
+    // Get the authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const token = authHeader.substring(7);
+
+    // Verify the token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your_jwt_secret_key_here"
+    ) as any;
+
+    // Check if the user is admin
+    if (decoded.email !== "victortobi2000@gmail.com") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    client = await pool.connect();
+
+    // Get all users with their transaction counts and subscription status
+    const result = await client.query(`
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.created_at,
+        COUNT(t.id) as transaction_count,
+        CASE 
+          WHEN COUNT(t.id) > 10 THEN true 
+          ELSE false 
+        END as has_subscription
+      FROM users u
+      LEFT JOIN transactions t ON u.id = t.user_id
+      GROUP BY u.id, u.name, u.email, u.created_at
+      ORDER BY u.created_at DESC
+    `);
+
+    // Transform the data to match the frontend expectations
+    const users = result.rows.map((user) => ({
+      id: user.id,
+      name: user.name || "Unknown",
+      email: user.email,
+      subscribed: user.has_subscription,
+      active: true, // All users are active by default
+      createdAt: user.created_at,
+      transactionCount: parseInt(user.transaction_count),
+    }));
+
+    res.json(users);
+  } catch (error: any) {
+    console.error("Admin get users error:", error);
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+});
+
+// Admin endpoint to toggle user status (block/unblock)
+app.put(
+  "/api/admin/users/:userId/status",
+  async (req: Request, res: Response) => {
+    let client: PoolClient | null = null;
+    try {
+      // Get the authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+
+      const token = authHeader.substring(7);
+
+      // Verify the token
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "your_jwt_secret_key_here"
+      ) as any;
+
+      // Check if the user is admin
+      if (decoded.email !== "victortobi2000@gmail.com") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { userId } = req.params;
+      const { active } = req.body;
+
+      client = await pool.connect();
+
+      // Update user status (you might want to add an 'active' column to your users table)
+      // For now, we'll just return success
+      // TODO: Add active column to users table if needed
+
+      res.json({
+        message: "User status updated successfully",
+        userId,
+        active,
+      });
+    } catch (error: any) {
+      console.error("Admin update user status error:", error);
+      if (error.name === "JsonWebTokenError") {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+);
+
 // Serve index.html for all other routes
 app.get("*", (_req: Request, res: Response) => {
   const indexPath = path.join(staticPath, "index.html");

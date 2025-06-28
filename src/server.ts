@@ -395,6 +395,7 @@ app.get("/api/admin/users", async (req: Request, res: Response) => {
         u.id,
         u.name,
         u.email,
+        u.active,
         u.created_at,
         COUNT(t.id) as transaction_count,
         CASE 
@@ -403,7 +404,7 @@ app.get("/api/admin/users", async (req: Request, res: Response) => {
         END as has_subscription
       FROM users u
       LEFT JOIN transactions t ON u.id = t.user_id
-      GROUP BY u.id, u.name, u.email, u.created_at
+      GROUP BY u.id, u.name, u.email, u.active, u.created_at
       ORDER BY u.created_at DESC
     `);
 
@@ -413,7 +414,7 @@ app.get("/api/admin/users", async (req: Request, res: Response) => {
       name: user.name || "Unknown",
       email: user.email,
       subscribed: user.has_subscription,
-      active: true, // All users are active by default
+      active: user.active,
       createdAt: user.created_at,
       transactionCount: parseInt(user.transaction_count),
     }));
@@ -433,110 +434,83 @@ app.get("/api/admin/users", async (req: Request, res: Response) => {
 });
 
 // Admin endpoint to toggle user status (block/unblock)
-app.put(
-  "/api/admin/users/:userId/status",
-  async (req: Request, res: Response) => {
-    let client: PoolClient | null = null;
-    try {
-      // Get the authorization header
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "No token provided" });
-      }
-
-      const token = authHeader.substring(7);
-
-      // Verify the token
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your_jwt_secret_key_here"
-      ) as any;
-
-      // Check if the user is admin
-      if (decoded.email !== "victortobi2000@gmail.com") {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const { userId } = req.params;
-      const { active } = req.body;
-
-      client = await pool.connect();
-
-      // Update user status (you might want to add an 'active' column to your users table)
-      // For now, we'll just return success
-      // TODO: Add active column to users table if needed
-
-      res.json({
-        message: "User status updated successfully",
-        userId,
-        active,
-      });
-    } catch (error: any) {
-      console.error("Admin update user status error:", error);
-      if (error.name === "JsonWebTokenError") {
-        return res.status(401).json({ message: "Invalid token" });
-      }
-      res.status(500).json({ message: "Internal server error" });
-    } finally {
-      if (client) {
-        client.release();
-      }
+app.put("/api/admin/users/:userId/status", async (req, res) => {
+  let client: PoolClient | null = null;
+  try {
+    // Get the authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "No token provided" });
     }
+
+    const token = authHeader.substring(7);
+
+    // Verify the token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your_jwt_secret_key_here"
+    ) as any;
+
+    // Check if the user is admin
+    if (decoded.email !== "victortobi2000@gmail.com") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    const { userId } = req.params;
+    const { active } = req.body;
+    client = await pool.connect();
+    const result = await client.query(
+      "UPDATE users SET active = $1 WHERE id = $2 RETURNING *",
+      [active, userId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ message: "User status updated successfully", userId, active });
+  } catch (error) {
+    console.error("Admin update user status error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (client) client.release();
   }
-);
+});
 
 // Get user status endpoint
-app.get(
-  "/api/admin/users/:userId/status",
-  async (req: Request, res: Response) => {
-    let client: PoolClient | null = null;
-    try {
-      const { userId } = req.params;
-
-      // Get the authorization header
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "No token provided" });
-      }
-
-      const token = authHeader.substring(7);
-
-      // Verify the token (we don't need to store the decoded result for this endpoint)
-      jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret_key_here");
-
-      client = await pool.connect();
-
-      // Get user status (for now, all users are active by default)
-      // TODO: Add active column to users table
-      const result = await client.query(
-        "SELECT id, email FROM users WHERE id = $1",
-        [userId]
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // For now, all users are active
-      // You can modify this logic when you add the active column
-      res.json({
-        active: true,
-        userId: result.rows[0].id,
-        email: result.rows[0].email,
-      });
-    } catch (error: any) {
-      console.error("Get user status error:", error);
-      if (error.name === "JsonWebTokenError") {
-        return res.status(401).json({ message: "Invalid token" });
-      }
-      res.status(500).json({ message: "Internal server error" });
-    } finally {
-      if (client) {
-        client.release();
-      }
+app.get("/api/admin/users/:userId/status", async (req, res) => {
+  let client: PoolClient | null = null;
+  try {
+    // Get the authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "No token provided" });
     }
+
+    const token = authHeader.substring(7);
+
+    // Verify the token (we don't need to store the decoded result for this endpoint)
+    jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret_key_here");
+
+    const { userId } = req.params;
+    client = await pool.connect();
+    const result = await client.query(
+      "SELECT id, email, active FROM users WHERE id = $1",
+      [userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      active: result.rows[0].active,
+      userId: result.rows[0].id,
+      email: result.rows[0].email,
+    });
+  } catch (error) {
+    console.error("Get user status error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (client) client.release();
   }
-);
+});
 
 // Blocked user support message endpoint
 app.post("/api/support/message", async (req: Request, res: Response) => {

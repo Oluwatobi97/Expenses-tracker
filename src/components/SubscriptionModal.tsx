@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface SubscriptionModalProps {
@@ -35,12 +35,27 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   onClose,
 }) => {
   const navigate = useNavigate();
+
+  // Track dismissal in localStorage
+  useEffect(() => {
+    if (!isOpen) return;
+    const dismissed = localStorage.getItem("subscriptionModalDismissed");
+    if (dismissed === "true") {
+      onClose();
+    }
+  }, [isOpen, onClose]);
+
+  const handleClose = () => {
+    localStorage.setItem("subscriptionModalDismissed", "true");
+    onClose();
+  };
+
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full mx-2 p-4 sm:p-6 relative animate-fadeIn">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-indigo-600 text-xl font-bold focus:outline-none"
           aria-label="Close"
         >
@@ -76,7 +91,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         </div>
         <button
           onClick={() => {
-            onClose();
+            handleClose();
             navigate("/subscriptions");
           }}
           className="mt-6 w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
@@ -84,7 +99,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           View Plans
         </button>
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="mt-3 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           Cancel

@@ -485,6 +485,96 @@ app.put(
   }
 );
 
+// Get user status endpoint
+app.get(
+  "/api/admin/users/:userId/status",
+  async (req: Request, res: Response) => {
+    let client: PoolClient | null = null;
+    try {
+      const { userId } = req.params;
+
+      // Get the authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+
+      const token = authHeader.substring(7);
+
+      // Verify the token (we don't need to store the decoded result for this endpoint)
+      jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret_key_here");
+
+      client = await pool.connect();
+
+      // Get user status (for now, all users are active by default)
+      // TODO: Add active column to users table
+      const result = await client.query(
+        "SELECT id, email FROM users WHERE id = $1",
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // For now, all users are active
+      // You can modify this logic when you add the active column
+      res.json({
+        active: true,
+        userId: result.rows[0].id,
+        email: result.rows[0].email,
+      });
+    } catch (error: any) {
+      console.error("Get user status error:", error);
+      if (error.name === "JsonWebTokenError") {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+);
+
+// Blocked user support message endpoint
+app.post("/api/support/message", async (req: Request, res: Response) => {
+  let client: PoolClient | null = null;
+  try {
+    const { email, subject, message } = req.body;
+
+    // Validate input
+    if (!email || !subject || !message) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["email", "subject", "message"],
+      });
+    }
+
+    client = await pool.connect();
+
+    // Store the support message in the database
+    // You might want to create a support_messages table
+    // For now, we'll just return success
+    // TODO: Create support_messages table and store messages
+
+    console.log("Support message received:", { email, subject, message });
+
+    res.status(201).json({
+      message: "Support message sent successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error("Support message error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+});
+
 // Serve index.html for all other routes
 app.get("*", (_req: Request, res: Response) => {
   const indexPath = path.join(staticPath, "index.html");

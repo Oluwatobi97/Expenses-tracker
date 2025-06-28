@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { FaPlus } from "react-icons/fa";
-import BlockedUserCard from "./BlockedUserCard";
+// import BlockedUserCard from "./BlockedUserCard";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -159,7 +159,8 @@ export const Dashboard = () => {
 
   // Show blocked user card if user is not active
   if (userStatus && !userStatus.active) {
-    return <BlockedUserCard />;
+    // return <BlockedUserCard />;
+    return <div>Account suspended</div>;
   }
 
   if (loading) return <div className="text-center p-4">Loading...</div>;

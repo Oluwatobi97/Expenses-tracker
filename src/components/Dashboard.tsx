@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { FaPlus } from "react-icons/fa";
+import BlockedUserCard from "./BlockedUserCard";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -18,6 +19,10 @@ export const Dashboard = () => {
     convertAmount,
   } = useTransactions();
   const [showModal, setShowModal] = useState(false);
+  const [userStatus, setUserStatus] = useState<{ active: boolean } | null>(
+    null
+  );
+  const [checkingStatus, setCheckingStatus] = useState(true);
   const [newTransaction, setNewTransaction] = useState({
     type: "expense",
     amount: "",
@@ -30,6 +35,42 @@ export const Dashboard = () => {
     expenses: 0,
     savings: 0,
   });
+
+  // Check user status
+  const checkUserStatus = async () => {
+    try {
+      const token =
+        user?.token || localStorage.getItem("user")
+          ? JSON.parse(localStorage.getItem("user") || "{}").token
+          : null;
+
+      if (!token) {
+        setUserStatus({ active: true }); // Default to active if no token
+        return;
+      }
+
+      const response = await fetch(`/api/admin/users/${user?.id}/status`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserStatus(data);
+      } else {
+        // If we can't check status, assume user is active
+        setUserStatus({ active: true });
+      }
+    } catch (error) {
+      console.error("Error checking user status:", error);
+      setUserStatus({ active: true }); // Default to active on error
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
   // Calculate totals
   const monthlyTotals = transactions.reduce(
@@ -51,6 +92,8 @@ export const Dashboard = () => {
   useEffect(() => {
     if (!user) {
       navigate("/login");
+    } else {
+      checkUserStatus();
     }
   }, [user, navigate]);
 
@@ -102,6 +145,22 @@ export const Dashboard = () => {
         return "₦";
     }
   };
+
+  // Show loading while checking user status
+  if (checkingStatus) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show blocked user card if user is not active
+  if (userStatus && !userStatus.active) {
+    return <BlockedUserCard />;
+  }
 
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="text-center text-red-500 p-4">{error}</div>;

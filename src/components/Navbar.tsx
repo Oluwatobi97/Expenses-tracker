@@ -32,6 +32,9 @@ export default function Navbar() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Check if user is admin
+  const isAdmin = user?.email === "victortobi2000@gmail.com";
+
   const authenticatedNavItems = [
     { path: "/dashboard", label: "Dashboard" },
     { path: "/transactions", label: "Transactions" },
@@ -39,6 +42,8 @@ export default function Navbar() {
     { path: "/notifications", label: "Notifications" },
     { path: "/subscriptions", label: "Subscription" },
     { path: "/settings", label: "Settings" },
+    // Add admin link only for admin users
+    ...(isAdmin ? [{ path: "/admin", label: "Admin" }] : []),
   ];
 
   const publicNavItems = [
@@ -82,6 +87,10 @@ export default function Navbar() {
                     isActive(item.path)
                       ? "border-indigo-500 text-gray-900 dark:text-white"
                       : "border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-200"
+                  } ${
+                    item.path === "/admin"
+                      ? "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                      : ""
                   }`}
                 >
                   {item.label}
@@ -147,6 +156,10 @@ export default function Navbar() {
                   isActive(item.path)
                     ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400"
                     : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-indigo-700 dark:hover:text-indigo-300"
+                } ${
+                  item.path === "/admin"
+                    ? "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
+                    : ""
                 }`}
               >
                 {item.label}

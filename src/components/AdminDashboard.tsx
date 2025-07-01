@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Notification } from "../types/index.js";
 
 interface User {
   id: string;
@@ -16,6 +17,14 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+
+  // Notification state for admin
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState<string | null>(null);
+  const [replyingId, setReplyingId] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [notifSuccess, setNotifSuccess] = useState<string | null>(null);
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -107,9 +116,48 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
+  // Fetch all notifications
+  const fetchNotifications = async () => {
+    setNotifLoading(true);
+    setNotifError(null);
+    try {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) throw new Error("Failed to fetch notifications");
+      setNotifications(await res.json());
+    } catch (err) {
+      setNotifError("Failed to load notifications");
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchNotifications();
   }, []);
+
+  // Handle reply submit
+  const handleReply = async (notifId: number) => {
+    setNotifLoading(true);
+    setNotifError(null);
+    setNotifSuccess(null);
+    try {
+      const res = await fetch(`/api/notifications/${notifId}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reply: replyText }),
+      });
+      if (!res.ok) throw new Error("Failed to send reply");
+      setReplyText("");
+      setReplyingId(null);
+      setNotifSuccess("Reply sent.");
+      fetchNotifications();
+    } catch (err) {
+      setNotifError("Failed to send reply");
+    } finally {
+      setNotifLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -260,6 +308,99 @@ const AdminDashboard: React.FC = () => {
             <p className="text-gray-500 dark:text-gray-400">No users found</p>
           </div>
         )}
+
+        {/* Notifications Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-4 text-indigo-700 dark:text-indigo-300">
+            User Notifications
+          </h2>
+          {notifLoading ? (
+            <div>Loading notifications...</div>
+          ) : notifError ? (
+            <div className="text-red-500">{notifError}</div>
+          ) : notifications.length === 0 ? (
+            <div className="text-gray-500">No notifications yet.</div>
+          ) : (
+            <ul className="space-y-4">
+              {notifications.map((notif) => (
+                <li
+                  key={notif.id}
+                  className="border rounded p-4 bg-white dark:bg-gray-800"
+                >
+                  <div className="mb-2 text-gray-800 dark:text-gray-200">
+                    <span className="font-semibold">User ID:</span>{" "}
+                    {notif.user_id}
+                  </div>
+                  <div className="mb-2">
+                    <span className="font-semibold">Message:</span>{" "}
+                    {notif.message}
+                  </div>
+                  {notif.reply ? (
+                    <div className="mt-2 text-green-700 dark:text-green-400">
+                      <span className="font-semibold">Admin reply:</span>{" "}
+                      {notif.reply}
+                    </div>
+                  ) : (
+                    <div className="mt-2">
+                      {replyingId === notif.id ? (
+                        <div className="flex flex-col gap-2">
+                          <textarea
+                            className="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:text-white"
+                            rows={2}
+                            placeholder="Type your reply..."
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              className="bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700"
+                              onClick={() => handleReply(notif.id)}
+                              disabled={notifLoading || !replyText.trim()}
+                            >
+                              {notifLoading ? "Sending..." : "Send Reply"}
+                            </button>
+                            <button
+                              className="bg-gray-300 text-gray-800 px-4 py-1 rounded hover:bg-gray-400"
+                              onClick={() => {
+                                setReplyingId(null);
+                                setReplyText("");
+                              }}
+                              disabled={notifLoading}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          className="bg-indigo-500 text-white px-4 py-1 rounded hover:bg-indigo-600"
+                          onClick={() => {
+                            setReplyingId(notif.id);
+                            setReplyText("");
+                          }}
+                        >
+                          Reply
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-400 mt-2">
+                    Sent: {new Date(notif.created_at).toLocaleString()}
+                    {notif.replied_at && (
+                      <span>
+                        {" "}
+                        | Replied: {new Date(notif.replied_at).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {notifSuccess && (
+            <div className="text-green-600 mt-2">{notifSuccess}</div>
+          )}
+        </div>
       </div>
     </div>
   );

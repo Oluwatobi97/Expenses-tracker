@@ -64,3 +64,13 @@ export interface TransactionContextType {
   loading: boolean;
   error: string | null;
 }
+
+export interface Notification {
+  id: number;
+  user_id: number;
+  message: string;
+  reply?: string | null;
+  created_at: string;
+  replied_at?: string | null;
+  read: boolean;
+}

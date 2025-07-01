@@ -10,6 +10,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import { runMigrations } from "./db/migrate.js";
+import {
+  createNotification,
+  getAllNotifications,
+  replyToNotification,
+  getUserNotifications,
+} from "./models/notification.js";
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -562,6 +568,78 @@ app.get("*", (_req: Request, res: Response) => {
     res.status(404).send("index.html not found");
   }
 });
+
+// User sends a notification message
+app.post("/api/notifications", async (req: Request, res: Response) => {
+  const { user_id, message } = req.body;
+  if (!user_id || !message) {
+    return res
+      .status(400)
+      .json({ message: "user_id and message are required" });
+  }
+  try {
+    const notification = await createNotification(user_id, message);
+    res.status(201).json(notification);
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: "Failed to send notification", error: error.message });
+  }
+});
+
+// Admin fetches all notifications
+app.get("/api/notifications", async (_req: Request, res: Response) => {
+  try {
+    const notifications = await getAllNotifications();
+    res.json(notifications);
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: "Failed to fetch notifications", error: error.message });
+  }
+});
+
+// Admin replies to a notification
+app.post(
+  "/api/notifications/:id/reply",
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { reply } = req.body;
+    if (!reply) {
+      return res.status(400).json({ message: "Reply is required" });
+    }
+    try {
+      const notification = await replyToNotification(Number(id), reply);
+      res.json(notification);
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({
+          message: "Failed to reply to notification",
+          error: error.message,
+        });
+    }
+  }
+);
+
+// User fetches their notifications (including admin replies)
+app.get(
+  "/api/notifications/user/:user_id",
+  async (req: Request, res: Response) => {
+    const { user_id } = req.params;
+    try {
+      const notifications = await getUserNotifications(Number(user_id));
+      res.json(notifications);
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({
+          message: "Failed to fetch user notifications",
+          error: error.message,
+        });
+    }
+  }
+);
 
 const dbConfig = {
   connectionString: process.env.DATABASE_URL,

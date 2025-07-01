@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { FaPlus } from "react-icons/fa";
+import { Notification } from "../types/index.js";
 // import BlockedUserCard from "./BlockedUserCard";
 
 export const Dashboard = () => {
@@ -35,6 +36,13 @@ export const Dashboard = () => {
     expenses: 0,
     savings: 0,
   });
+
+  // Notification state for blocked users
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState<string | null>(null);
+  const [notifSuccess, setNotifSuccess] = useState<string | null>(null);
 
   // Check user status
   const checkUserStatus = async () => {
@@ -111,6 +119,18 @@ export const Dashboard = () => {
     updateConvertedAmounts();
   }, [totals, currency, convertAmount]);
 
+  // Fetch notifications for blocked user
+  useEffect(() => {
+    if (user && userStatus && !userStatus.active) {
+      setNotifLoading(true);
+      fetch(`/api/notifications/user/${user.id}`)
+        .then((res) => res.json())
+        .then((data) => setNotifications(data))
+        .catch(() => setNotifications([]))
+        .finally(() => setNotifLoading(false));
+    }
+  }, [user, userStatus]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -130,6 +150,34 @@ export const Dashboard = () => {
       });
     } catch (error) {
       console.error("Error adding transaction:", error);
+    }
+  };
+
+  // Handle notification form submit
+  const handleNotificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNotifLoading(true);
+    setNotifError(null);
+    setNotifSuccess(null);
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user?.id,
+          message: notificationMessage,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to send notification");
+      setNotifSuccess("Message sent to admin.");
+      setNotificationMessage("");
+      // Refresh notifications
+      const notifRes = await fetch(`/api/notifications/user/${user?.id}`);
+      setNotifications(await notifRes.json());
+    } catch (err) {
+      setNotifError("Failed to send message. Try again.");
+    } finally {
+      setNotifLoading(false);
     }
   };
 
@@ -159,8 +207,85 @@ export const Dashboard = () => {
 
   // Show blocked user card if user is not active
   if (userStatus && !userStatus.active) {
-    // return <BlockedUserCard />;
-    return <div>Account suspended</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16 flex flex-col items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 max-w-md w-full mt-12">
+          <h2 className="text-2xl font-bold text-red-600 mb-4 text-center">
+            Account Suspended
+          </h2>
+          <p className="mb-6 text-gray-700 dark:text-gray-300 text-center">
+            Your account has been blocked. If you believe this is a mistake, you
+            can send a message to the admin below.
+          </p>
+          <form onSubmit={handleNotificationSubmit} className="mb-4">
+            <textarea
+              className="w-full p-2 border border-gray-300 rounded mb-2 dark:bg-gray-700 dark:text-white"
+              rows={3}
+              placeholder="Type your message to admin..."
+              value={notificationMessage}
+              onChange={(e) => setNotificationMessage(e.target.value)}
+              required
+              disabled={notifLoading}
+            />
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition-colors"
+              disabled={notifLoading || !notificationMessage.trim()}
+            >
+              {notifLoading ? "Sending..." : "Send Message"}
+            </button>
+            {notifError && (
+              <div className="text-red-500 mt-2 text-center">{notifError}</div>
+            )}
+            {notifSuccess && (
+              <div className="text-green-600 mt-2 text-center">
+                {notifSuccess}
+              </div>
+            )}
+          </form>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">
+              Your Messages & Admin Replies
+            </h3>
+            {notifLoading ? (
+              <div>Loading...</div>
+            ) : notifications.length === 0 ? (
+              <div className="text-gray-500">No messages yet.</div>
+            ) : (
+              <ul className="space-y-3">
+                {notifications.map((notif) => (
+                  <li
+                    key={notif.id}
+                    className="border rounded p-3 bg-gray-50 dark:bg-gray-700"
+                  >
+                    <div className="mb-1 text-gray-800 dark:text-gray-200">
+                      <span className="font-semibold">You:</span>{" "}
+                      {notif.message}
+                    </div>
+                    {notif.reply && (
+                      <div className="mt-1 text-green-700 dark:text-green-400">
+                        <span className="font-semibold">Admin reply:</span>{" "}
+                        {notif.reply}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-400 mt-1">
+                      Sent: {new Date(notif.created_at).toLocaleString()}
+                      {notif.replied_at && (
+                        <span>
+                          {" "}
+                          | Replied:{" "}
+                          {new Date(notif.replied_at).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (loading) return <div className="text-center p-4">Loading...</div>;

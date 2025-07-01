@@ -555,20 +555,6 @@ app.post("/api/support/message", async (req: Request, res: Response) => {
   }
 });
 
-// Serve index.html for all other routes
-app.get("*", (_req: Request, res: Response) => {
-  const indexPath = path.join(staticPath, "index.html");
-  console.log("Attempting to serve index.html from:", indexPath);
-
-  if (fs.existsSync(indexPath)) {
-    console.log("index.html exists");
-    res.sendFile(indexPath);
-  } else {
-    console.error("index.html not found!");
-    res.status(404).send("index.html not found");
-  }
-});
-
 // User sends a notification message
 app.post("/api/notifications", async (req: Request, res: Response) => {
   const { user_id, message } = req.body;
@@ -612,12 +598,10 @@ app.post(
       const notification = await replyToNotification(Number(id), reply);
       res.json(notification);
     } catch (error: any) {
-      res
-        .status(500)
-        .json({
-          message: "Failed to reply to notification",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Failed to reply to notification",
+        error: error.message,
+      });
     }
   }
 );
@@ -631,15 +615,27 @@ app.get(
       const notifications = await getUserNotifications(Number(user_id));
       res.json(notifications);
     } catch (error: any) {
-      res
-        .status(500)
-        .json({
-          message: "Failed to fetch user notifications",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Failed to fetch user notifications",
+        error: error.message,
+      });
     }
   }
 );
+
+// Serve index.html for all other routes
+app.get("*", (_req: Request, res: Response) => {
+  const indexPath = path.join(staticPath, "index.html");
+  console.log("Attempting to serve index.html from:", indexPath);
+
+  if (fs.existsSync(indexPath)) {
+    console.log("index.html exists");
+    res.sendFile(indexPath);
+  } else {
+    console.error("index.html not found!");
+    res.status(404).send("index.html not found");
+  }
+});
 
 const dbConfig = {
   connectionString: process.env.DATABASE_URL,

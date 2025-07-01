@@ -171,9 +171,11 @@ export const Dashboard = () => {
       if (!res.ok) throw new Error("Failed to send notification");
       setNotifSuccess("Message sent to admin.");
       setNotificationMessage("");
-      // Refresh notifications
-      const notifRes = await fetch(`/api/notifications/user/${user?.id}`);
-      setNotifications(await notifRes.json());
+      // Refresh notifications, but don't treat as a send error if this fails
+      fetch(`/api/notifications/user/${user?.id}`)
+        .then((notifRes) => notifRes.json())
+        .then((data) => setNotifications(data))
+        .catch(() => {}); // Ignore errors here
     } catch (err) {
       setNotifError("Failed to send message. Try again.");
     } finally {

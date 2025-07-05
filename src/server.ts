@@ -352,6 +352,22 @@ app.post("/api/transactions", async (req: Request, res: Response) => {
       "INSERT INTO transactions (user_id, type, amount, date, description) VALUES ($1, $2, $3, $4, $5) RETURNING id",
       [user_id, type, amount, date, description]
     );
+
+    // Check limits after adding transaction (only for expenses)
+    if (type === "expense") {
+      try {
+        // Get all user transactions to check against limits
+        const transactionsResult = await client.query(
+          "SELECT * FROM transactions WHERE user_id = $1 ORDER BY date DESC",
+          [user_id]
+        );
+        await checkLimits(Number(user_id), transactionsResult.rows);
+      } catch (limitError) {
+        console.error("Limit check error:", limitError);
+        // Don't fail the transaction if limit check fails
+      }
+    }
+
     res.status(201).json({
       id: result.rows[0].id,
       user_id,
@@ -622,6 +638,57 @@ app.get(
     }
   }
 );
+
+// User limits endpoints
+import {
+  getUserLimit,
+  createOrUpdateUserLimit,
+  deleteUserLimit,
+} from "./models/userLimit.js";
+import { checkLimits } from "./services/limitAlerts.js";
+
+// Get user limits
+app.get("/api/user-limits/:user_id", async (req: Request, res: Response) => {
+  try {
+    const { user_id } = req.params;
+    const userLimit = await getUserLimit(Number(user_id));
+    res.json(userLimit);
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to fetch user limits",
+      error: error.message,
+    });
+  }
+});
+
+// Create or update user limits
+app.post("/api/user-limits/:user_id", async (req: Request, res: Response) => {
+  try {
+    const { user_id } = req.params;
+    const limitData = req.body;
+    const userLimit = await createOrUpdateUserLimit(Number(user_id), limitData);
+    res.json(userLimit);
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to create/update user limits",
+      error: error.message,
+    });
+  }
+});
+
+// Delete user limits
+app.delete("/api/user-limits/:user_id", async (req: Request, res: Response) => {
+  try {
+    const { user_id } = req.params;
+    await deleteUserLimit(Number(user_id));
+    res.json({ message: "User limits deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to delete user limits",
+      error: error.message,
+    });
+  }
+});
 
 // Serve index.html for all other routes
 app.get("*", (_req: Request, res: Response) => {

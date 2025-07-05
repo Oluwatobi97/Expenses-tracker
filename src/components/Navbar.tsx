@@ -40,6 +40,7 @@ export default function Navbar() {
     { path: "/transactions", label: "Transactions" },
     { path: "/analytics", label: "Analytics" },
     { path: "/notifications", label: "Notifications" },
+    { path: "/limit-settings", label: "Spending Limits" },
     { path: "/subscriptions", label: "Subscription" },
     { path: "/settings", label: "Settings" },
     // Add admin link only for admin users

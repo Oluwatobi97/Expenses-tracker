@@ -74,3 +74,21 @@ export interface Notification {
   replied_at?: string | null;
   read: boolean;
 }
+
+export interface UserLimit {
+  id: number;
+  user_id: number;
+  daily_limit: number | null;
+  monthly_limit: number | null;
+  daily_limit_enabled: boolean;
+  monthly_limit_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateUserLimitRequest {
+  daily_limit?: number | null;
+  monthly_limit?: number | null;
+  daily_limit_enabled?: boolean;
+  monthly_limit_enabled?: boolean;
+}

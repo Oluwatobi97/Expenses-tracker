@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { FaPlus } from "react-icons/fa";
@@ -498,6 +498,35 @@ export const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Limit Alerts Section */}
+        {notifications.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              ⚠️ Spending Limit Alerts
+            </h2>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              {notifications.map((notification) => (
+                <div key={notification.id} className="mb-3 last:mb-0">
+                  <p className="text-yellow-800 dark:text-yellow-200">
+                    {notification.message}
+                  </p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                    {new Date(notification.created_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+              <div className="mt-4">
+                <Link
+                  to="/limit-settings"
+                  className="text-sm text-yellow-800 dark:text-yellow-200 underline hover:no-underline"
+                >
+                  Manage your spending limits →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Transactions List */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">

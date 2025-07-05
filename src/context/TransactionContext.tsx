@@ -174,6 +174,9 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       const newTransaction = await response.json();
       setTransactions((prev) => [...prev, newTransaction]);
       setError(null);
+
+      // Refresh transactions to get updated totals for limit checking
+      await refreshTransactions();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       throw err;

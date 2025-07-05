@@ -23,6 +23,18 @@ interface TransactionContextType {
     savings: number;
     balance: number;
   };
+  dailyTotals: {
+    income: number;
+    expenses: number;
+    savings: number;
+    balance: number;
+  };
+  monthlyTotals: {
+    income: number;
+    expenses: number;
+    savings: number;
+    balance: number;
+  };
   currency: string;
   setCurrency: (currency: string) => void;
   convertAmount: (
@@ -56,11 +68,38 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         } else if (transaction.type === "savings") {
           acc.savings += amount;
         }
-        acc.balance = acc.income - acc.expenses;
+        acc.balance = acc.income - acc.expenses - acc.savings;
         return acc;
       },
       { income: 0, expenses: 0, savings: 0, balance: 0 }
     );
+  };
+
+  const calculateDailyTotals = (transactions: Transaction[]) => {
+    const today = new Date().toISOString().split("T")[0];
+    const todayTransactions = transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.created_at)
+        .toISOString()
+        .split("T")[0];
+      return transactionDate === today;
+    });
+
+    return calculateTotals(todayTransactions);
+  };
+
+  const calculateMonthlyTotals = (transactions: Transaction[]) => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const monthlyTransactions = transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.created_at);
+      return (
+        transactionDate.getMonth() === currentMonth &&
+        transactionDate.getFullYear() === currentYear
+      );
+    });
+
+    return calculateTotals(monthlyTransactions);
   };
 
   const convertAmount = async (
@@ -148,7 +187,8 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const totals = calculateTotals(transactions);
-  totals.balance = totals.income - totals.expenses;
+  const dailyTotals = calculateDailyTotals(transactions);
+  const monthlyTotals = calculateMonthlyTotals(transactions);
 
   return (
     <TransactionContext.Provider
@@ -160,6 +200,8 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         refreshTransactions,
         fetchTransactions,
         totals,
+        dailyTotals,
+        monthlyTotals,
         currency,
         setCurrency,
         convertAmount,

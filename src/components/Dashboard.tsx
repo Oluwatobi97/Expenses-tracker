@@ -15,6 +15,8 @@ export const Dashboard = () => {
     error,
     addTransaction,
     totals,
+    dailyTotals,
+    monthlyTotals,
     currency,
     setCurrency,
     convertAmount,
@@ -31,6 +33,20 @@ export const Dashboard = () => {
     date: new Date().toISOString().split("T")[0],
   });
   const [convertedAmounts, setConvertedAmounts] = useState({
+    balance: 0,
+    income: 0,
+    expenses: 0,
+    savings: 0,
+  });
+
+  const [convertedDailyAmounts, setConvertedDailyAmounts] = useState({
+    balance: 0,
+    income: 0,
+    expenses: 0,
+    savings: 0,
+  });
+
+  const [convertedMonthlyAmounts, setConvertedMonthlyAmounts] = useState({
     balance: 0,
     income: 0,
     expenses: 0,
@@ -80,23 +96,6 @@ export const Dashboard = () => {
     }
   };
 
-  // Calculate totals
-  const monthlyTotals = transactions.reduce(
-    (acc, transaction) => {
-      const amount = Number(transaction.amount);
-      if (transaction.type === "income") {
-        acc.income += amount;
-      } else if (transaction.type === "expense") {
-        acc.expenses += amount;
-      } else if (transaction.type === "savings") {
-        acc.savings += amount;
-      }
-      acc.balance = acc.income - acc.expenses;
-      return acc;
-    },
-    { income: 0, expenses: 0, savings: 0, balance: 0 }
-  );
-
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -114,10 +113,26 @@ export const Dashboard = () => {
         savings: await convertAmount(totals.savings, "NGN", currency),
       };
       setConvertedAmounts(newAmounts);
+
+      const newDailyAmounts = {
+        balance: await convertAmount(dailyTotals.balance, "NGN", currency),
+        income: await convertAmount(dailyTotals.income, "NGN", currency),
+        expenses: await convertAmount(dailyTotals.expenses, "NGN", currency),
+        savings: await convertAmount(dailyTotals.savings, "NGN", currency),
+      };
+      setConvertedDailyAmounts(newDailyAmounts);
+
+      const newMonthlyAmounts = {
+        balance: await convertAmount(monthlyTotals.balance, "NGN", currency),
+        income: await convertAmount(monthlyTotals.income, "NGN", currency),
+        expenses: await convertAmount(monthlyTotals.expenses, "NGN", currency),
+        savings: await convertAmount(monthlyTotals.savings, "NGN", currency),
+      };
+      setConvertedMonthlyAmounts(newMonthlyAmounts);
     };
 
     updateConvertedAmounts();
-  }, [totals, currency, convertAmount]);
+  }, [totals, dailyTotals, monthlyTotals, currency, convertAmount]);
 
   // Fetch notifications for blocked user
   useEffect(() => {
@@ -382,46 +397,105 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Total Income
-            </h3>
-            <p className="text-2xl font-bold text-green-600">
-              {getCurrencySymbol(currency)}
-              {monthlyTotals.income.toFixed(2)}
-            </p>
+        {/* Daily Summary Cards */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Today's Summary
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Today's Income
+              </h3>
+              <p className="text-2xl font-bold text-green-600">
+                {getCurrencySymbol(currency)}
+                {convertedDailyAmounts.income.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Today's Expenses
+              </h3>
+              <p className="text-2xl font-bold text-red-600">
+                {getCurrencySymbol(currency)}
+                {convertedDailyAmounts.expenses.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Today's Savings
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {getCurrencySymbol(currency)}
+                {convertedDailyAmounts.savings.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Today's Balance
+              </h3>
+              <p
+                className={`text-2xl font-bold ${
+                  convertedDailyAmounts.balance >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {getCurrencySymbol(currency)}
+                {convertedDailyAmounts.balance.toFixed(2)}
+              </p>
+            </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Total Expenses
-            </h3>
-            <p className="text-2xl font-bold text-red-600">
-              {getCurrencySymbol(currency)}
-              {monthlyTotals.expenses.toFixed(2)}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Total Savings
-            </h3>
-            <p className="text-2xl font-bold text-blue-600">
-              {getCurrencySymbol(currency)}
-              {monthlyTotals.savings.toFixed(2)}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Total Balance
-            </h3>
-            <p
-              className={`text-2xl font-bold ${
-                monthlyTotals.balance >= 0 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {getCurrencySymbol(currency)}
-              {monthlyTotals.balance.toFixed(2)}
-            </p>
+        </div>
+
+        {/* Monthly Summary Cards */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            This Month's Summary
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Monthly Income
+              </h3>
+              <p className="text-2xl font-bold text-green-600">
+                {getCurrencySymbol(currency)}
+                {convertedMonthlyAmounts.income.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Monthly Expenses
+              </h3>
+              <p className="text-2xl font-bold text-red-600">
+                {getCurrencySymbol(currency)}
+                {convertedMonthlyAmounts.expenses.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Monthly Savings
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {getCurrencySymbol(currency)}
+                {convertedMonthlyAmounts.savings.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Monthly Balance
+              </h3>
+              <p
+                className={`text-2xl font-bold ${
+                  convertedMonthlyAmounts.balance >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {getCurrencySymbol(currency)}
+                {convertedMonthlyAmounts.balance.toFixed(2)}
+              </p>
+            </div>
           </div>
         </div>
 

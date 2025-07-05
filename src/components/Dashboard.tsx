@@ -518,7 +518,7 @@ export const Dashboard = () => {
               ))}
               <div className="mt-4">
                 <Link
-                  to="/limit-settings"
+                  to="/settings"
                   className="text-sm text-yellow-800 dark:text-yellow-200 underline hover:no-underline"
                 >
                   Manage your spending limits →

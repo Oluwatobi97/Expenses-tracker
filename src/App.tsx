@@ -13,7 +13,7 @@ import { Dashboard } from "./components/Dashboard";
 import { Analytics } from "./components/Analytics";
 import { Transactions } from "./components/Transactions";
 import Settings from "./components/Settings";
-import { LimitSettings } from "./components/LimitSettings";
+
 import LandingPage from "./components/LandingPage";
 import About from "./components/About";
 import SubscriptionsPage from "./components/SubscriptionsPage";
@@ -87,14 +87,7 @@ function AppContent() {
               </PrivateRoute>
             }
           />
-          <Route
-            path="/limit-settings"
-            element={
-              <PrivateRoute>
-                <LimitSettings />
-              </PrivateRoute>
-            }
-          />
+
           <Route path="/subscriptions" element={<SubscriptionsPage />} />
           <Route
             path="/admin"

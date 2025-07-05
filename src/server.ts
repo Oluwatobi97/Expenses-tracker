@@ -639,6 +639,28 @@ app.get(
   }
 );
 
+// Mark notification as read
+app.put("/api/notifications/:id/read", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      "UPDATE notifications SET read = TRUE WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to mark notification as read",
+      error: error.message,
+    });
+  }
+});
+
 // User limits endpoints
 import {
   getUserLimit,

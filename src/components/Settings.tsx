@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { UserLimit, CreateUserLimitRequest } from "../types/index.js";
+import { useTransactions } from "../context/TransactionContext";
 
 export default function Settings() {
   const { user } = useAuth();
+  const { refreshTransactions } = useTransactions();
   const [userLimit, setUserLimit] = useState<UserLimit | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +16,9 @@ export default function Settings() {
     daily_limit_enabled: false,
     monthly_limit_enabled: false,
   });
+  const [clearSuccess, setClearSuccess] = useState<string | null>(null);
+  const [clearError, setClearError] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   const fetchUserLimits = useCallback(async () => {
     if (!user?.id) {
@@ -128,6 +133,31 @@ export default function Settings() {
       setError("Failed to delete spending limits");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearTransactions = async () => {
+    if (!user?.id) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to clear ALL your transactions? This cannot be undone."
+      )
+    )
+      return;
+    setClearing(true);
+    setClearSuccess(null);
+    setClearError(null);
+    try {
+      const res = await fetch(`/api/transactions/user/${user.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to clear transactions");
+      setClearSuccess("All transactions cleared successfully!");
+      await refreshTransactions();
+    } catch (err) {
+      setClearError("Failed to clear transactions. Please try again.");
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -329,13 +359,30 @@ export default function Settings() {
         </div>
 
         {/* Other Settings Sections */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             Account Settings
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             More account settings will be available here soon.
           </p>
+          <button
+            onClick={handleClearTransactions}
+            disabled={clearing}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
+          >
+            {clearing ? "Clearing..." : "Clear Transactions"}
+          </button>
+          {clearSuccess && (
+            <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md text-green-700 dark:text-green-400">
+              {clearSuccess}
+            </div>
+          )}
+          {clearError && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400">
+              {clearError}
+            </div>
+          )}
         </div>
       </div>
     </div>

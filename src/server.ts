@@ -712,6 +712,25 @@ app.delete("/api/user-limits/:user_id", async (req: Request, res: Response) => {
   }
 });
 
+// Delete all transactions for a user
+app.delete(
+  "/api/transactions/user/:userId",
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    try {
+      await pool.query("DELETE FROM transactions WHERE user_id = $1", [userId]);
+      res.json({ message: "All transactions deleted successfully" });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({
+          message: "Failed to delete transactions",
+          error: error.message,
+        });
+    }
+  }
+);
+
 // Serve index.html for all other routes
 app.get("*", (_req: Request, res: Response) => {
   const indexPath = path.join(staticPath, "index.html");

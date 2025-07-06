@@ -8,7 +8,7 @@ import { Notification } from "../types/index.js";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const {
     transactions,
     loading,
@@ -103,6 +103,13 @@ export const Dashboard = () => {
       checkUserStatus();
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (userStatus && userStatus.active === false) {
+      logout();
+      navigate("/login");
+    }
+  }, [userStatus, logout, navigate]);
 
   useEffect(() => {
     const updateConvertedAmounts = async () => {

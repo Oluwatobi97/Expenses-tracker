@@ -297,8 +297,8 @@ export default function Settings() {
                   </p>
                   <p className="text-lg font-medium text-gray-900 dark:text-white">
                     {userLimit.daily_limit_enabled &&
-                    userLimit.daily_limit &&
-                    typeof userLimit.daily_limit === "number"
+                    userLimit.daily_limit !== null &&
+                    userLimit.daily_limit !== undefined
                       ? `₦${userLimit.daily_limit.toFixed(2)}`
                       : "Not set"}
                   </p>
@@ -309,8 +309,8 @@ export default function Settings() {
                   </p>
                   <p className="text-lg font-medium text-gray-900 dark:text-white">
                     {userLimit.monthly_limit_enabled &&
-                    userLimit.monthly_limit &&
-                    typeof userLimit.monthly_limit === "number"
+                    userLimit.monthly_limit !== null &&
+                    userLimit.monthly_limit !== undefined
                       ? `₦${userLimit.monthly_limit.toFixed(2)}`
                       : "Not set"}
                   </p>

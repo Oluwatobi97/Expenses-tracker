@@ -78,9 +78,10 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const calculateDailyTotals = (transactions: Transaction[]) => {
     const today = new Date().toISOString().split("T")[0];
     const todayTransactions = transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.created_at)
-        .toISOString()
-        .split("T")[0];
+      if (!transaction.created_at) return false;
+      const dateObj = new Date(transaction.created_at);
+      if (isNaN(dateObj.getTime())) return false;
+      const transactionDate = dateObj.toISOString().split("T")[0];
       return transactionDate === today;
     });
 
@@ -92,10 +93,12 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     const currentYear = new Date().getFullYear();
 
     const monthlyTransactions = transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.created_at);
+      if (!transaction.created_at) return false;
+      const dateObj = new Date(transaction.created_at);
+      if (isNaN(dateObj.getTime())) return false;
       return (
-        transactionDate.getMonth() === currentMonth &&
-        transactionDate.getFullYear() === currentYear
+        dateObj.getMonth() === currentMonth &&
+        dateObj.getFullYear() === currentYear
       );
     });
 

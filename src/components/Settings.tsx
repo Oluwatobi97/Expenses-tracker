@@ -27,14 +27,22 @@ export default function Settings() {
       const response = await fetch(`/api/user-limits/${user.id}`);
       if (response.ok) {
         const data = await response.json();
-        setUserLimit(data);
         if (data) {
+          setUserLimit({
+            ...data,
+            daily_limit:
+              data.daily_limit !== null ? Number(data.daily_limit) : null,
+            monthly_limit:
+              data.monthly_limit !== null ? Number(data.monthly_limit) : null,
+          });
           setFormData({
             daily_limit: data.daily_limit?.toString() || "",
             monthly_limit: data.monthly_limit?.toString() || "",
             daily_limit_enabled: data.daily_limit_enabled || false,
             monthly_limit_enabled: data.monthly_limit_enabled || false,
           });
+        } else {
+          setUserLimit(null);
         }
       } else {
         setError("Failed to fetch user limits");
@@ -299,7 +307,7 @@ export default function Settings() {
                     {userLimit.daily_limit_enabled &&
                     userLimit.daily_limit !== null &&
                     userLimit.daily_limit !== undefined
-                      ? `₦${userLimit.daily_limit.toFixed(2)}`
+                      ? `₦${Number(userLimit.daily_limit).toFixed(2)}`
                       : "Not set"}
                   </p>
                 </div>
@@ -311,7 +319,7 @@ export default function Settings() {
                     {userLimit.monthly_limit_enabled &&
                     userLimit.monthly_limit !== null &&
                     userLimit.monthly_limit !== undefined
-                      ? `₦${userLimit.monthly_limit.toFixed(2)}`
+                      ? `₦${Number(userLimit.monthly_limit).toFixed(2)}`
                       : "Not set"}
                   </p>
                 </div>

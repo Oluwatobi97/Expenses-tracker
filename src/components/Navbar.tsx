@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.js";
 import { useAuth } from "../context/AuthContext.js";
 import { useState, useEffect } from "react";
+import { Notification } from "../types/index.js";
 
 export default function Navbar() {
   const location = useLocation();
@@ -10,6 +11,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -30,6 +32,22 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   }, [user, location.pathname]);
 
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`/api/notifications/user/${user.id}`);
+        if (res.ok) {
+          const data: Notification[] = await res.json();
+          setHasUnreadNotifications(data.some((n) => !n.read));
+        }
+      } catch {
+        setHasUnreadNotifications(false);
+      }
+    };
+    fetchNotifications();
+  }, [user?.id]);
+
   const isActive = (path: string) => location.pathname === path;
 
   // Check if user is admin
@@ -39,7 +57,17 @@ export default function Navbar() {
     { path: "/dashboard", label: "Dashboard" },
     { path: "/transactions", label: "Transactions" },
     { path: "/analytics", label: "Analytics" },
-    { path: "/notifications", label: "Notifications" },
+    {
+      path: "/notifications",
+      label: (
+        <span className="relative">
+          Notifications
+          {hasUnreadNotifications && (
+            <span className="absolute -top-2 -right-3 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+          )}
+        </span>
+      ),
+    },
     { path: "/subscriptions", label: "Subscription" },
     { path: "/settings", label: "Settings" },
     // Add admin link only for admin users

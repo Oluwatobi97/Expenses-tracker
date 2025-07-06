@@ -349,7 +349,7 @@ app.post("/api/transactions", async (req: Request, res: Response) => {
     client = await pool.connect();
     const { user_id, type, amount, date, description } = req.body;
     const result = await client.query(
-      "INSERT INTO transactions (user_id, type, amount, date, description) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      "INSERT INTO transactions (user_id, type, amount, date, description) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [user_id, type, amount, date, description]
     );
 
@@ -368,14 +368,7 @@ app.post("/api/transactions", async (req: Request, res: Response) => {
       }
     }
 
-    res.status(201).json({
-      id: result.rows[0].id,
-      user_id,
-      type,
-      amount,
-      date,
-      description,
-    });
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Add transaction error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -721,12 +714,10 @@ app.delete(
       await pool.query("DELETE FROM transactions WHERE user_id = $1", [userId]);
       res.json({ message: "All transactions deleted successfully" });
     } catch (error: any) {
-      res
-        .status(500)
-        .json({
-          message: "Failed to delete transactions",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Failed to delete transactions",
+        error: error.message,
+      });
     }
   }
 );

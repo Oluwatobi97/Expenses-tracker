@@ -1,5 +1,8 @@
 import { getUserLimit } from "../models/userLimit.js";
-import { createNotification } from "../models/notification.js";
+import {
+  createNotification,
+  getUserNotifications,
+} from "../models/notification.js";
 import { Transaction } from "../types/index.js";
 
 export async function checkDailyLimit(
@@ -15,6 +18,7 @@ export async function checkDailyLimit(
   const today = new Date().toISOString().split("T")[0];
   const todayExpenses = transactions
     .filter((t) => {
+      if (!t.created_at) return false;
       const transactionDate = new Date(t.created_at)
         .toISOString()
         .split("T")[0];
@@ -22,14 +26,34 @@ export async function checkDailyLimit(
     })
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  if (todayExpenses >= userLimit.daily_limit) {
-    const message = `⚠️ Daily spending limit alert! You've spent ${todayExpenses.toFixed(
-      2
-    )} today, which has reached or exceeded your daily limit of ${userLimit.daily_limit.toFixed(
-      2
-    )}.`;
+  console.log(
+    `[LimitCheck] User ${user_id} - Today: ${today}, Expenses: ${todayExpenses}, Limit: ${userLimit.daily_limit}`
+  );
 
-    await createNotification(user_id, message);
+  if (todayExpenses >= userLimit.daily_limit) {
+    // Only create one notification per day
+    const notifications = await getUserNotifications(user_id);
+    const alreadyNotified = notifications.some(
+      (n) =>
+        n.message.includes("Daily spending limit alert") &&
+        n.created_at &&
+        new Date(n.created_at).toISOString().split("T")[0] === today
+    );
+    if (!alreadyNotified) {
+      const message = `⚠️ Daily spending limit alert! You've spent ${todayExpenses.toFixed(
+        2
+      )} today, which has reached or exceeded your daily limit of ${userLimit.daily_limit.toFixed(
+        2
+      )}.`;
+      await createNotification(user_id, message);
+      console.log(
+        `[LimitCheck] Daily limit notification created for user ${user_id}`
+      );
+    } else {
+      console.log(
+        `[LimitCheck] Daily limit notification already exists for user ${user_id}`
+      );
+    }
   }
 }
 
@@ -52,6 +76,7 @@ export async function checkMonthlyLimit(
 
   const monthlyExpenses = transactions
     .filter((t) => {
+      if (!t.created_at) return false;
       const transactionDate = new Date(t.created_at);
       return (
         transactionDate.getMonth() === currentMonth &&
@@ -61,14 +86,41 @@ export async function checkMonthlyLimit(
     })
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  if (monthlyExpenses >= userLimit.monthly_limit) {
-    const message = `⚠️ Monthly spending limit alert! You've spent ${monthlyExpenses.toFixed(
-      2
-    )} this month, which has reached or exceeded your monthly limit of ${userLimit.monthly_limit.toFixed(
-      2
-    )}.`;
+  console.log(
+    `[LimitCheck] User ${user_id} - Month: ${
+      currentMonth + 1
+    }/${currentYear}, Expenses: ${monthlyExpenses}, Limit: ${
+      userLimit.monthly_limit
+    }`
+  );
 
-    await createNotification(user_id, message);
+  if (monthlyExpenses >= userLimit.monthly_limit) {
+    // Only create one notification per month
+    const notifications = await getUserNotifications(user_id);
+    const alreadyNotified = notifications.some((n) => {
+      if (!n.message.includes("Monthly spending limit alert") || !n.created_at)
+        return false;
+      const notifDate = new Date(n.created_at);
+      return (
+        notifDate.getMonth() === currentMonth &&
+        notifDate.getFullYear() === currentYear
+      );
+    });
+    if (!alreadyNotified) {
+      const message = `⚠️ Monthly spending limit alert! You've spent ${monthlyExpenses.toFixed(
+        2
+      )} this month, which has reached or exceeded your monthly limit of ${userLimit.monthly_limit.toFixed(
+        2
+      )}.`;
+      await createNotification(user_id, message);
+      console.log(
+        `[LimitCheck] Monthly limit notification created for user ${user_id}`
+      );
+    } else {
+      console.log(
+        `[LimitCheck] Monthly limit notification already exists for user ${user_id}`
+      );
+    }
   }
 }
 

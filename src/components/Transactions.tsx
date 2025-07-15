@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useTransactions } from "../context/TransactionContext.js";
+import TransactionForm from "./TransactionForm";
+import { Transaction } from "../types/index.js";
 
 export function Transactions() {
   const { transactions, currency } = useTransactions();
   const [filter, setFilter] = useState("all");
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
 
   const filteredTransactions = transactions.filter((transaction) => {
     if (filter === "all") return true;
@@ -113,12 +117,26 @@ export function Transactions() {
                       {transaction.type}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button
+                      onClick={() => setEditingTransaction(transaction)}
+                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                    >
+                      Edit
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      {editingTransaction && (
+        <TransactionForm
+          transaction={editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+        />
+      )}
     </div>
   );
 }

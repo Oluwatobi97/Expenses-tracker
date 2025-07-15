@@ -14,7 +14,6 @@ export const Dashboard = () => {
     transactions,
     loading,
     error,
-    addTransaction,
     totals,
     dailyTotals,
     monthlyTotals,
@@ -27,12 +26,7 @@ export const Dashboard = () => {
     null
   );
   const [checkingStatus, setCheckingStatus] = useState(true);
-  const [newTransaction, setNewTransaction] = useState({
-    type: "expense",
-    amount: "",
-    description: "",
-    date: new Date().toISOString().split("T")[0],
-  });
+  // Remove the unused newTransaction and setNewTransaction state
   const [convertedAmounts, setConvertedAmounts] = useState({
     balance: 0,
     income: 0,
@@ -153,28 +147,6 @@ export const Dashboard = () => {
         .finally(() => setNotifLoading(false));
     }
   }, [user, userStatus]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await addTransaction({
-        ...newTransaction,
-        user_id: user?.id || "",
-        amount: Number(newTransaction.amount),
-        type: newTransaction.type as "income" | "expense" | "savings",
-        date: new Date().toISOString(),
-      });
-      setShowModal(false);
-      setNewTransaction({
-        amount: "",
-        description: "",
-        type: "expense",
-        date: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error("Error adding transaction:", error);
-    }
-  };
 
   // Handle notification form submit
   const handleNotificationSubmit = async (e: React.FormEvent) => {

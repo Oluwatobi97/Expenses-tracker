@@ -7,6 +7,7 @@ import { differenceInHours } from "date-fns";
 
 export default function TransactionList() {
   const { transactions, loading, error, currency } = useTransactions();
+  console.log("DEBUG TransactionList render:", { transactions });
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
 

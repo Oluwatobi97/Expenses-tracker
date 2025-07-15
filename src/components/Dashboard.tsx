@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { FaPlus } from "react-icons/fa";
 import { Notification } from "../types/index.js";
+import TransactionForm from "./TransactionForm";
 // import BlockedUserCard from "./BlockedUserCard";
 
 export const Dashboard = () => {
@@ -601,85 +602,7 @@ export const Dashboard = () => {
       </main>
 
       {/* Add Transaction Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Add New Transaction
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Type
-                </label>
-                <select
-                  value={newTransaction.type}
-                  onChange={(e) =>
-                    setNewTransaction({
-                      ...newTransaction,
-                      type: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="income">Income</option>
-                  <option value="expense">Expense</option>
-                  <option value="savings">Savings</option>
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Amount
-                </label>
-                <input
-                  type="number"
-                  value={newTransaction.amount}
-                  onChange={(e) =>
-                    setNewTransaction({
-                      ...newTransaction,
-                      amount: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={newTransaction.description}
-                  onChange={(e) =>
-                    setNewTransaction({
-                      ...newTransaction,
-                      description: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
-                >
-                  Add Transaction
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {showModal && <TransactionForm onClose={() => setShowModal(false)} />}
     </div>
   );
 };

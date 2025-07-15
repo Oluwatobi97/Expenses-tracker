@@ -3,7 +3,6 @@ import { Transaction } from "../types/index.js";
 import { useTransactions } from "../context/TransactionContext.js";
 import TransactionForm from "./TransactionForm.js";
 import { format } from "date-fns";
-import { differenceInHours } from "date-fns";
 
 export default function TransactionList() {
   const { transactions, loading, error, currency } = useTransactions();

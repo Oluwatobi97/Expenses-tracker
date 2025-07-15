@@ -15,6 +15,12 @@ interface TransactionContextType {
   addTransaction: (
     transaction: Omit<Transaction, "id" | "created_at" | "updated_at">
   ) => Promise<void>;
+  updateTransaction: (
+    id: string,
+    updates: Partial<
+      Omit<Transaction, "id" | "created_at" | "updated_at" | "user_id">
+    >
+  ) => Promise<void>;
   refreshTransactions: () => Promise<void>;
   fetchTransactions: (userId: string) => Promise<void>;
   totals: {
@@ -186,6 +192,34 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateTransaction = async (
+    id: string,
+    updates: Partial<
+      Omit<Transaction, "id" | "created_at" | "updated_at" | "user_id">
+    >
+  ) => {
+    try {
+      const response = await fetch(`${API_BASE}/transactions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update transaction");
+      }
+      const updated = await response.json();
+      setTransactions((prev) =>
+        prev.map((tx) => (tx.id === id ? { ...tx, ...updated } : tx))
+      );
+      setError(null);
+      await refreshTransactions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    }
+  };
+
   const refreshTransactions = async () => {
     if (user?.id) {
       await fetchTransactions(user.id);
@@ -203,6 +237,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         loading,
         error,
         addTransaction,
+        updateTransaction,
         refreshTransactions,
         fetchTransactions,
         totals,

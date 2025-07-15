@@ -379,6 +379,52 @@ app.post("/api/transactions", async (req: Request, res: Response) => {
   }
 });
 
+// Update transaction endpoint (edit only within 3 hours)
+app.put("/api/transactions/:id", async (req: Request, res: Response) => {
+  let client: PoolClient | null = null;
+  try {
+    client = await pool.connect();
+    const { id } = req.params;
+    const { type, amount, date, description } = req.body;
+
+    // Fetch the transaction to check the created_at timestamp
+    const txResult = await client.query(
+      "SELECT * FROM transactions WHERE id = $1",
+      [id]
+    );
+    if (txResult.rows.length === 0) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+    const transaction = txResult.rows[0];
+    const createdAt = new Date(transaction.created_at);
+    const now = new Date();
+    const diffMs = now.getTime() - createdAt.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    if (diffHours > 3) {
+      return res
+        .status(403)
+        .json({
+          message:
+            "You can only edit a transaction within 3 hours of creation.",
+        });
+    }
+
+    // Update the transaction
+    const updateResult = await client.query(
+      "UPDATE transactions SET type = $1, amount = $2, date = $3, description = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *",
+      [type, amount, date, description, id]
+    );
+    res.json(updateResult.rows[0]);
+  } catch (error) {
+    console.error("Update transaction error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+});
+
 // Admin endpoint to get all users
 app.get("/api/admin/users", async (req: Request, res: Response) => {
   let client: PoolClient | null = null;

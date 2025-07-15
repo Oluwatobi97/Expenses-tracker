@@ -3,6 +3,7 @@ import { Transaction } from "../types/index.js";
 import { useTransactions } from "../context/TransactionContext.js";
 import TransactionForm from "./TransactionForm.js";
 import { format } from "date-fns";
+import { differenceInHours, parseISO } from "date-fns";
 
 export default function TransactionList() {
   const { transactions, loading, error, currency } = useTransactions();
@@ -60,41 +61,57 @@ export default function TransactionList() {
 
       <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-          {transactions.map((transaction) => (
-            <li key={transaction.id} className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                    {transaction.description}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {format(new Date(transaction.date), "MMM d, yyyy")}
-                  </p>
+          {transactions.map((transaction) => {
+            const createdAt = transaction.created_at || transaction.date;
+            const hoursSinceCreation = differenceInHours(
+              new Date(),
+              new Date(createdAt)
+            );
+            const canEdit = hoursSinceCreation <= 3;
+            return (
+              <li key={transaction.id} className="px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {transaction.description}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {format(new Date(transaction.date), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                  <div className="ml-4 flex-shrink-0 flex items-center space-x-4">
+                    <span
+                      className={`text-sm font-medium ${
+                        transaction.type === "income"
+                          ? "text-green-600 dark:text-green-400"
+                          : transaction.type === "savings"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {transaction.type === "expense" ? "-" : "+"}
+                      {formatCurrency(Math.abs(transaction.amount))}
+                    </span>
+                    <button
+                      onClick={() => (canEdit ? handleEdit(transaction) : null)}
+                      className={`text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 ${
+                        !canEdit ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!canEdit}
+                      title={
+                        canEdit
+                          ? "Edit transaction"
+                          : "You can only edit within 3 hours of creation"
+                      }
+                    >
+                      Edit
+                    </button>
+                    {/* Delete button removed unless you implement deleteTransaction */}
+                  </div>
                 </div>
-                <div className="ml-4 flex-shrink-0 flex items-center space-x-4">
-                  <span
-                    className={`text-sm font-medium ${
-                      transaction.type === "income"
-                        ? "text-green-600 dark:text-green-400"
-                        : transaction.type === "savings"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {transaction.type === "expense" ? "-" : "+"}
-                    {formatCurrency(Math.abs(transaction.amount))}
-                  </span>
-                  <button
-                    onClick={() => handleEdit(transaction)}
-                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                  >
-                    Edit
-                  </button>
-                  {/* Delete button removed unless you implement deleteTransaction */}
-                </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

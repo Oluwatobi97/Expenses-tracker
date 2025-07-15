@@ -17,7 +17,7 @@ export default function TransactionForm({
   onClose,
   transaction,
 }: TransactionFormProps) {
-  const { addTransaction } = useTransactions();
+  const { addTransaction, updateTransaction } = useTransactions();
   const { user } = useAuth();
   const [formData, setFormData] = useState<TransactionFormData>(
     transaction || {
@@ -30,6 +30,8 @@ export default function TransactionForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState<null | (() => void)>(null);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -49,22 +51,30 @@ export default function TransactionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    try {
-      await addTransaction({
-        ...formData,
-        user_id: user!.id,
-      });
-      onClose();
-    } catch (error) {
-      setErrors({
-        general:
-          error instanceof Error ? error.message : "Failed to add transaction",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setShowConfirm(true);
+    setPendingSubmit(() => async () => {
+      setIsSubmitting(true);
+      try {
+        if (transaction) {
+          await updateTransaction(transaction.id, formData);
+        } else {
+          await addTransaction({
+            ...formData,
+            user_id: user!.id,
+          });
+        }
+        onClose();
+      } catch (error) {
+        setErrors({
+          general:
+            error instanceof Error
+              ? error.message
+              : "Failed to save transaction",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   return (
@@ -233,6 +243,41 @@ export default function TransactionForm({
           </div>
         </div>
       </div>
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Confirm Transaction
+            </h2>
+            <p className="mb-4">
+              Are you sure you want to {transaction ? "edit" : "add"} this
+              transaction for{" "}
+              <span className="font-bold">{formData.amount}</span>?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                onClick={() => {
+                  setShowConfirm(false);
+                  setPendingSubmit(null);
+                }}
+              >
+                No
+              </button>
+              <button
+                className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={async () => {
+                  setShowConfirm(false);
+                  if (pendingSubmit) await pendingSubmit();
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

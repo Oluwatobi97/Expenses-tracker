@@ -63,18 +63,6 @@ export default function TransactionList() {
       <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {transactions.map((transaction) => {
-            const createdAt = transaction.created_at || transaction.date;
-            const hoursSinceCreation = differenceInHours(
-              new Date(),
-              new Date(createdAt)
-            );
-            const canEdit = hoursSinceCreation <= 3;
-            console.log("DEBUG TRANSACTION:", {
-              transaction,
-              createdAt,
-              hoursSinceCreation,
-              canEdit,
-            });
             return (
               <li key={transaction.id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
@@ -100,16 +88,9 @@ export default function TransactionList() {
                       {formatCurrency(Math.abs(transaction.amount))}
                     </span>
                     <button
-                      onClick={() => (canEdit ? handleEdit(transaction) : null)}
-                      className={`text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 ${
-                        !canEdit ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={!canEdit}
-                      title={
-                        canEdit
-                          ? "Edit transaction"
-                          : "You can only edit within 3 hours of creation"
-                      }
+                      onClick={() => handleEdit(transaction)}
+                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      title="Edit transaction"
                     >
                       Edit
                     </button>

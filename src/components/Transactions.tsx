@@ -9,6 +9,9 @@ export function Transactions() {
   const [filter, setFilter] = useState("all");
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] =
+    useState<Transaction | null>(null);
 
   const filteredTransactions = transactions.filter((transaction) => {
     if (filter === "all") return true;
@@ -134,10 +137,10 @@ export function Transactions() {
                           Edit
                         </button>
                         <button
-                          onClick={() =>
-                            deleteTransaction &&
-                            deleteTransaction(transaction.id)
-                          }
+                          onClick={() => {
+                            setTransactionToDelete(transaction);
+                            setShowDeleteConfirm(true);
+                          }}
                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
                         >
                           Delete
@@ -156,6 +159,43 @@ export function Transactions() {
           transaction={editingTransaction}
           onClose={() => setEditingTransaction(null)}
         />
+      )}
+      {showDeleteConfirm && transactionToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-xs w-full shadow-xl border border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white text-center">
+              Confirm Delete
+            </h2>
+            <p className="mb-4 text-center">
+              Are you sure you want to delete the transaction{" "}
+              <span className="font-bold">
+                {transactionToDelete.description}
+              </span>
+              ?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setTransactionToDelete(null);
+                }}
+              >
+                No
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                onClick={async () => {
+                  await deleteTransaction(transactionToDelete.id);
+                  setShowDeleteConfirm(false);
+                  setTransactionToDelete(null);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

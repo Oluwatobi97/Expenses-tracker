@@ -68,6 +68,12 @@ export default function TransactionList() {
               new Date(createdAt)
             );
             const canEdit = hoursSinceCreation <= 3;
+            console.log("DEBUG TRANSACTION:", {
+              transaction,
+              createdAt,
+              hoursSinceCreation,
+              canEdit,
+            });
             return (
               <li key={transaction.id} className="px-6 py-4">
                 <div className="flex items-center justify-between">

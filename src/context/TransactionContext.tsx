@@ -21,6 +21,7 @@ interface TransactionContextType {
       Omit<Transaction, "id" | "created_at" | "updated_at" | "user_id">
     >
   ) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
   refreshTransactions: () => Promise<void>;
   fetchTransactions: (userId: string) => Promise<void>;
   totals: {
@@ -220,6 +221,24 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const deleteTransaction = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/transactions/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete transaction");
+      }
+      setTransactions((prev) => prev.filter((tx) => tx.id !== id));
+      setError(null);
+      await refreshTransactions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    }
+  };
+
   const refreshTransactions = async () => {
     if (user?.id) {
       await fetchTransactions(user.id);
@@ -238,6 +257,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         error,
         addTransaction,
         updateTransaction,
+        deleteTransaction,
         refreshTransactions,
         fetchTransactions,
         totals,

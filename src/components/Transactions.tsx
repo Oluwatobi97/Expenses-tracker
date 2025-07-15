@@ -5,7 +5,7 @@ import { Transaction } from "../types/index.js";
 import { differenceInHours } from "date-fns";
 
 export function Transactions() {
-  const { transactions, currency } = useTransactions();
+  const { transactions, currency, deleteTransaction } = useTransactions();
   const [filter, setFilter] = useState("all");
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
@@ -129,9 +129,18 @@ export function Transactions() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={() => setEditingTransaction(transaction)}
-                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium mr-2"
                         >
                           Edit
+                        </button>
+                        <button
+                          onClick={() =>
+                            deleteTransaction &&
+                            deleteTransaction(transaction.id)
+                          }
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                        >
+                          Delete
                         </button>
                       </td>
                     )}

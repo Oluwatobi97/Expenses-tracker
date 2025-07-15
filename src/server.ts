@@ -401,12 +401,9 @@ app.put("/api/transactions/:id", async (req: Request, res: Response) => {
     const diffMs = now.getTime() - createdAt.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
     if (diffHours > 3) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "You can only edit a transaction within 3 hours of creation.",
-        });
+      return res.status(403).json({
+        message: "You can only edit a transaction within 3 hours of creation.",
+      });
     }
 
     // Update the transaction
@@ -422,6 +419,28 @@ app.put("/api/transactions/:id", async (req: Request, res: Response) => {
     if (client) {
       client.release();
     }
+  }
+});
+
+// Delete a single transaction by ID
+app.delete("/api/transactions/:id", async (req: Request, res: Response) => {
+  let client: PoolClient | null = null;
+  try {
+    client = await pool.connect();
+    const { id } = req.params;
+    const result = await client.query(
+      "DELETE FROM transactions WHERE id = $1 RETURNING *",
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+    res.json({ message: "Transaction deleted successfully" });
+  } catch (error) {
+    console.error("Delete transaction error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (client) client.release();
   }
 });
 

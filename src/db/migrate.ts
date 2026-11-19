@@ -9,17 +9,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : false,
-});
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 export async function runMigrations() {
+  if (!process.env.DATABASE_URL) {
+    console.warn("[AI Studio] DATABASE_URL not set — skipping SQL migrations (in-memory mock active)");
+    return;
+  }
+
+  const sslConfig =
+    process.env.SSL_ENABLED === "true"
+      ? { rejectUnauthorized: false }
+      : process.env.SSL_ENABLED === "false"
+      ? false
+      : process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false;
+
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: sslConfig,
+  });
+
   const client = await pool.connect();
   try {
     // Start transaction
@@ -50,6 +61,7 @@ export async function runMigrations() {
     throw error;
   } finally {
     client.release();
+    await pool.end();
   }
 }
 

@@ -37,7 +37,20 @@ console.log("Database configuration:", {
   ssl: dbConfig.ssl ? "enabled" : "disabled",
 });
 
-const pool = new Pool(dbConfig);
+let pool: Pool;
+try {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL not set");
+  }
+  pool = new Pool(dbConfig);
+} catch {
+  console.warn("[AI Studio] DB not connected in database.ts — mock active");
+  pool = {
+    query: async () => ({ rows: [], rowCount: 0 }),
+    connect: async () => ({ query: async () => ({ rows: [], rowCount: 0 }), release: () => {} }),
+    on: () => {},
+  } as unknown as Pool;
+}
 
 // Retry connection function
 const retryConnection = async (maxRetries = 5, delay = 5000) => {

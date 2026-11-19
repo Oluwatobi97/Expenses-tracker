@@ -14,8 +14,8 @@
     "sourceMap": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/server.ts", "src/config/**/*"],
-  "exclude": ["node_modules", "dist", "src/components/**/*", "src/context/**/*", "src/App.tsx", "src/main.tsx"],
+  "include": ["src/server.ts", "src/config/**/*", "src/db/**/*", "src/models/**/*", "src/services/limitAlerts.ts", "src/types/**/*"],
+  "exclude": ["node_modules", "dist", "src/components/**/*", "src/context/**/*", "src/contexts/**/*", "src/services/api.ts", "src/App.tsx", "src/main.tsx"],
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"

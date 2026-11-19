@@ -1,13 +1,12 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import pool from "./config/db.config.js";
 import { PoolClient } from "pg";
 import { SERVER_CONFIG } from "./config/server.config.js";
 import path from "path";
-import { fileURLToPath } from "url";
 import fs from "fs";
 import { runMigrations } from "./db/migrate.js";
 import {
@@ -16,13 +15,15 @@ import {
   replyToNotification,
   getUserNotifications,
 } from "./models/notification.js";
-
-// Get the directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {
+  getUserLimit,
+  createOrUpdateUserLimit,
+  deleteUserLimit,
+} from "./models/userLimit.js";
+import { checkLimits } from "./services/limitAlerts.js";
 
 // Load environment variables from the root directory
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 // Debug: Log environment variables (excluding sensitive data)
 console.log("Environment variables:", {
@@ -69,7 +70,7 @@ const app = express();
 // CORS configuration
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL || "http://localhost:5173"],
+    origin: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -100,80 +101,7 @@ async function testDbConnection() {
   }
 }
 
-// Initialize server
-async function startServer() {
-  try {
-    console.log("Starting server initialization...");
-    console.log("Environment:", process.env.NODE_ENV);
-
-    // Run migrations in production
-    if (process.env.NODE_ENV === "production") {
-      console.log("Running database migrations...");
-      try {
-        await runMigrations();
-        console.log("Database migrations completed successfully");
-      } catch (error) {
-        console.error("Database migration failed:", error);
-        // Continue server startup even if migration fails
-      }
-    }
-
-    // Test database connection
-    await testDbConnection();
-
-    if (!isDatabaseConnected) {
-      console.error(
-        "Failed to connect to database. Server will start but database features will be unavailable."
-      );
-    }
-
-    // Start server
-    const port = process.env.PORT || SERVER_CONFIG.PORT;
-    app.listen(port, () => {
-      console.log("=== Server Started Successfully ===");
-      console.log(`Server running on port ${port}`);
-      console.log(`Environment: ${process.env.NODE_ENV}`);
-      console.log(
-        `Database connection status: ${
-          isDatabaseConnected ? "Connected" : "Disconnected"
-        }`
-      );
-      console.log("=================================");
-    });
-  } catch (error) {
-    console.error("Server initialization failed:", error);
-    process.exit(1);
-  }
-}
-
-// Start the server
-startServer().catch((error) => {
-  console.error("Fatal error during server startup:", error);
-  process.exit(1);
-});
-
-// Debug information
-console.log("Current directory:", process.cwd());
-console.log("__dirname:", __dirname);
-console.log("NODE_ENV:", process.env.NODE_ENV);
-
-// Determine the correct path for static files
-const staticPath =
-  process.env.NODE_ENV === "production"
-    ? path.join(process.cwd(), "dist")
-    : path.join(__dirname, "dist");
-
-console.log("Static files path:", staticPath);
-
-// Check if directory exists
-if (fs.existsSync(staticPath)) {
-  console.log("Static directory exists");
-} else {
-  console.error("Static directory does not exist!");
-}
-
-// Serve static files
-app.use(express.static(staticPath));
+// Server startup is invoked after all routes and middleware are registered below.
 
 // Add a test endpoint to verify database connection
 app.get("/api/test-db", async (_req: Request, res: Response) => {
@@ -720,12 +648,6 @@ app.put("/api/notifications/:id/read", async (req: Request, res: Response) => {
 });
 
 // User limits endpoints
-import {
-  getUserLimit,
-  createOrUpdateUserLimit,
-  deleteUserLimit,
-} from "./models/userLimit.js";
-import { checkLimits } from "./services/limitAlerts.js";
 
 // Get user limits
 app.get("/api/user-limits/:user_id", async (req: Request, res: Response) => {
@@ -787,37 +709,63 @@ app.delete(
   }
 );
 
-// Serve index.html for all other routes
-app.get("*", (_req: Request, res: Response) => {
-  const indexPath = path.join(staticPath, "index.html");
-  console.log("Attempting to serve index.html from:", indexPath);
+// Initialize server with Vite dev middleware (dev) or static dist (prod)
+async function startServer() {
+  try {
+    console.log("Starting server initialization...");
+    console.log("Environment:", process.env.NODE_ENV || "development");
 
-  if (fs.existsSync(indexPath)) {
-    console.log("index.html exists");
-    res.sendFile(indexPath);
-  } else {
-    console.error("index.html not found!");
-    res.status(404).send("index.html not found");
+    if (process.env.NODE_ENV === "production") {
+      try {
+        await runMigrations();
+      } catch (error) {
+        console.error("Database migration failed:", error);
+      }
+    }
+
+    await testDbConnection();
+
+    const distPath = path.join(process.cwd(), "dist");
+    const distIndexPath = path.join(distPath, "index.html");
+
+    if (process.env.NODE_ENV === "production" && fs.existsSync(distIndexPath)) {
+      app.use(express.static(distPath));
+      app.get("*", (_req: Request, res: Response) => {
+        res.sendFile(distIndexPath);
+      });
+    } else {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true, hmr: false },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    }
+
+    const portArgIdx = process.argv.indexOf("--port");
+    const cliPort =
+      portArgIdx !== -1 && process.argv[portArgIdx + 1]
+        ? Number(process.argv[portArgIdx + 1])
+        : undefined;
+    const port = cliPort || Number(process.env.PORT || SERVER_CONFIG.PORT || 3000);
+    app.listen(port, "0.0.0.0", () => {
+      console.log("=== Server Started Successfully ===");
+      console.log(`Server running on http://0.0.0.0:${port}`);
+      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(
+        `Database connection status: ${
+          isDatabaseConnected ? "Connected" : "Mock / Disconnected"
+        }`
+      );
+      console.log("=================================");
+    });
+  } catch (error) {
+    console.error("Server initialization failed:", error);
+    process.exit(1);
   }
-});
+}
 
-const dbConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : false,
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-};
-
-// Log environment and db config before starting the server
-console.log("ENV:", process.env);
-console.log("DB CONFIG:", dbConfig);
-
-// Log database configuration (excluding sensitive data)
-console.log("Database configuration:", {
-  ...dbConfig,
-  password: "****",
-  connectionString: dbConfig.connectionString ? "****" : undefined,
+startServer().catch((error) => {
+  console.error("Fatal error during server startup:", error);
+  process.exit(1);
 });
